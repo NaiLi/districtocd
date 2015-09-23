@@ -6,7 +6,6 @@ var rowIndex = rows;
 
 var numberOfTypes = 4;
 var groundTiles;
-//var tileArray = [];
 var steppedTiles = [];
 var noSteppedTiles = [];
 var speed = 1;
@@ -45,14 +44,12 @@ var Game = {
 
 		// Add all tiles
 		for(; rowIndex >= 0; rowIndex--) {
-			//tileArray[i]=[];
 			this.newRow(rowIndex);
 		}
 		
 		gradient = game.add.sprite(0, -tileSize/2, 'gradient');
 
 		game.input.onDown.add(this.stepClicked, this);
-		//game.time.events.loop(speed, this.newRow(0)); 
 	},
 
 	update : function() {
@@ -103,7 +100,6 @@ var Game = {
 			newTile.name = randomValue;
 			groundTiles.add(newTile);
 			//newTile.events.onInputDown.add(this.stepClicked, this);
-			//tileArray[i][j]=newTile;
 		}
 	}
 };
