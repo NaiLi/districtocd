@@ -1,4 +1,4 @@
-	
+
 var tileSize = 40;
 var cols = 6;
 var rows = 10;
@@ -11,6 +11,8 @@ var steppedTiles = [];
 var noSteppedTiles = [];
 var speed = 1;
 var steps = 0;
+
+var gradient;
 
 var colors = {
 					0:0x32687A,
@@ -47,7 +49,7 @@ var Game = {
 			this.newRow(rowIndex);
 		}
 		
-		game.add.sprite(0, 0, 'gradient');
+		gradient = game.add.sprite(0, -tileSize/2, 'gradient');
 
 		game.input.onDown.add(this.stepClicked, this);
 		//game.time.events.loop(speed, this.newRow(0)); 
@@ -85,10 +87,10 @@ var Game = {
 	},
 
 	addResultTile : function(type, direction) { //direction: 0: left, 1: right
-		console.log("dir " + noSteppedTiles[direction]);
 		var resultTile = game.add.sprite(direction*(cols/2)*tileSize, (noSteppedTiles[direction]-1)*tileSize/2, 'tile_wide');
 		resultTile.inputEnabled = true;
 		resultTile.tint = colors[type];
+		gradient.y = (Math.ceil(steps/2)-1)*tileSize/2;
 	},
 
 	newRow : function(i) {
