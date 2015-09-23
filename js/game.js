@@ -6,9 +6,9 @@ var rowIndex = rows;
 
 var numberOfTypes = 4;
 var groundTiles;
-var tileArray = [];
-var steppedTilesRight = [];
-var steppedTilesLeft = [];
+//var tileArray = [];
+var steppedTiles = [];
+var noSteppedTiles = [];
 var speed = 1;
 var steps = 0;
 
@@ -30,9 +30,15 @@ var Game = {
 	create : function () {
 		groundTiles = game.add.group();
 
-		// Set no steps taken
+		steppedTiles[0] = [];
+		steppedTiles[1] = [];
+		noSteppedTiles[0] = 0;
+		noSteppedTiles[1] = 0;
+
+		// Set no steps taken on each type
 		for(var i=0; i < numberOfTypes; i++) {
-			steppedTiles[i] = 0;
+			steppedTiles[0][i] = 0;
+			steppedTiles[1][i] = 0;
 		}
 
 		// Add all tiles
@@ -59,22 +65,30 @@ var Game = {
 
 		console.log(tile.targetObject.sprite.name);
 		tile.targetObject.sprite.alpha = 0.7;
+		this.takeStep(tile.targetObject.sprite.name);
 
 	},
 
-	takeStep : function (name) {
+	takeStep : function (type) {
 
 		steps++;
 
-		if(steps%2 == 0) { 						// If right foot
-			steppedTilesRight[name]++;
-		} else {											// If left foot
-			steppedTilesLeft[name]++;
+		if(steps%2 == 0) { 						// If left foot
+			steppedTiles[0][type]++;
+			noSteppedTiles[0]++;
+			this.addResultTile(type, 0);
+		} else {											// If right foot
+			steppedTiles[1][type]++;
+			noSteppedTiles[1]++;
+			this.addResultTile(type, 1);
 		}
 	},
 
-	addResultTile : function(name) {
-
+	addResultTile : function(type, direction) { //direction: 0: left, 1: right
+		console.log("dir " + noSteppedTiles[direction]);
+		var resultTile = game.add.sprite(direction*(cols/2)*tileSize, (noSteppedTiles[direction]-1)*tileSize/2, 'tile_wide');
+		resultTile.inputEnabled = true;
+		resultTile.tint = colors[type];
 	},
 
 	newRow : function(i) {
