@@ -24,6 +24,7 @@ var Game = {
 	preload : function() {
 		game.load.image('tile', 'assets/tile.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
+		game.load.image('gradient', 'assets/gradient.png');
 	},
 
 	create : function () {
@@ -39,8 +40,9 @@ var Game = {
 			//tileArray[i]=[];
 			this.newRow(rowIndex);
 		}
-		//groundTiles.x = 0;
-		//groundTiles.y = 0;
+		
+		game.add.sprite(0, 0, 'gradient');
+
 		game.input.onDown.add(this.stepClicked, this);
 		//game.time.events.loop(speed, this.newRow(0)); 
 	},
