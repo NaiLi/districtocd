@@ -1,91 +1,20 @@
 <!doctype html> 
+<!-- Python server: python -m SimpleHTTPServer --> 
 <html lang="en"> 
 <head> 
 	<meta charset="UTF-8" />
 	<title>District OCD</title>
 	<script type="text/javascript" src="js/phaser/phaser.min.js"></script>
-    <style type="text/css">
-        body {
+  <style type="text/css">
+	    body {
             margin: 0;
-        }
-    </style>
+      }
+  </style>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
 </head>
 <body>
 
-<script type="text/javascript">
-
-var tileSize = 40;
-var cols = 5;
-var rows = 10;
-var numberOfTypes = 5;
-var game = new Phaser.Game(tileSize*cols, tileSize*rows, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-
-var groundTiles;
-var tileArray = [];
-var steppedTiles = [];
-
-var colors = {
-					2:0xFFFFFF,
-					4:0xFFEEEE,
-					8:0xFFDDDD,
-					16:0xFFCCCC,
-					32:0xFFBBBB
-				}
-
-function preload() {
-	game.load.image('nai', 'assets/naibyyenny.jpg');
-	game.load.image('tile', 'assets/tile_2.png');
-}
-
-function create() {
-	game.add.sprite(0, 0, 'nai');
-	groundTiles = game.add.group();
-
-	// Set no steps taken
-	for(var i=0; i < numberOfTypes; i++) {
-		steppedTiles[i] = 0;
-	}
-
-	// Add all tiles
-	for(var i=0; i < cols; i++) {
-		tileArray[i]=[];
-
-		for(var j=0; j < rows; j++) {
-			var randomValue = Math.floor(Math.random()*numberOfTypes);
-			var newTile = game.add.sprite(i*tileSize, j*tileSize, 'tile');
-			newTile.tint = colors[randomValue];
-			newTile.name = randomValue;
-			groundTiles.add(newTile);
-			tileArray[i][j]=newTile;
-		}
-	}
-
-	game.input.onDown.add(stepClicked, this);
-}
-
-function stepClicked() {
-	// save input coordinates
-	startX = game.input.worldX;
-	startY = game.input.worldY;
-	// retrieve selected row and column 
-	selectedRow = Math.floor(startY/tileSize);
-	selectedCol = Math.floor(startX/tileSize);
-	takeStep(selectedCol,selectedRow,tileArray[selectedCol][selectedRow].name);
-}
-
-function takeStep(col, row, name) {
-	steppedTiles[name]++;
-	console.log("you now have " + steppedTiles[name] + " steps on " + name);
-}
-
-function newRow() {
-	
-}
-
-function update() {
-}
-
-</script>
 
 </body>
 </html>
