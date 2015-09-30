@@ -1,4 +1,8 @@
-var tileSize = 40;
+
+var w = window.innerWidth;
+var h = window.innerHeight;
+
+var tileSize = 40;//w/6;//40;
 var cols = 6;
 var rows = 10;
 
