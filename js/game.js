@@ -5,6 +5,7 @@ var rows = 10;
 var rowIndex = rows;
 
 var score = 0;
+var scoreText;
 
 var numberOfTypes = 4;
 var groundTiles;
@@ -14,7 +15,7 @@ var noSteppedTiles = [];
 var tileCollisionGroup;
 var speed = 1;
 var steps = 0;
-var leftStep; // y coordinates
+var leftStep;
 var rightStep;
 
 var shadow;
@@ -44,6 +45,7 @@ var Game = {
 		game.physics.p2.gravity.y = -900;
 		game.physics.p2.restitution = 10;
 
+		// Create all tiles
 		groundTiles = game.add.group();
 		scoreTiles = game.add.group();
 
@@ -65,20 +67,33 @@ var Game = {
 		for(; rowIndex >= 0; rowIndex--) {
 			this.createNewRow(rowIndex);
 		}
-		//Create some dead tiles
+		//Create some dead tiles for recycling
 		this.createNewRow(-1);
 		
-		// Steps taken in y coordinates
+		// y coordinates of steps taken
+		// TODO might be possible to have only one var and check which one is lowest
 		leftStep = 0;
 		rightStep = 0;
 
+    // Score text
+    var style = { font: "16px Arial", fill: "#fff", 
+        align: "left", // the alignment of the text is independent of the bounds, try changing to 'center' or 'right'
+        boundsAlignH: "left", 
+        boundsAlignV: "bottom", 
+        wordWrap: true, wordWrapWidth: 300 };
+    scoreText = game.add.text(5, 380, "Score: ", style);
+
+
 		//shadow = game.add.sprite(0, -tileSize/2-360, 'shadow');
 
+		// Event when clicking on tile
 		game.input.onDown.add(this.stepClicked, this);
 
-		this.scale.setScreenSize = true;
-		this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-
+		// Responsiveness
+		game.scale.pageAlignHorizontally = true;
+		game.scale.pageAlignVertically = true;
+		game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL; //RESIZE? (better for desktop)
+		game.scale.setScreenSize(true);
 
 	},
 
@@ -153,7 +168,10 @@ var Game = {
 		for(var type = 0; type < numberOfTypes; type++) {
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
 				console.log("yey! Stepped " + steppedTiles[0][type] + " on " + type);
+				
 				score += steppedTiles[0][type]*1000;
+				scoreText.text = "Score: " + score;
+
 				steppedTiles[0][type] = 0;
 				steppedTiles[1][type] = 0;
 				this.clearScoreTiles(type);
