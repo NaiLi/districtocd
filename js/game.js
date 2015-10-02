@@ -13,7 +13,10 @@ var scoreTiles;
 var steppedTiles = [];
 var noSteppedTiles = [];
 var tileCollisionGroup;
+
 var speed = 1;
+var level = 1;
+
 var steps = 0;
 var leftStep;
 var rightStep;
@@ -107,15 +110,11 @@ var Game = {
 			this.newRow(rowIndex--);
 		}
 
-		//Check if gameover
-		if(leftStep > game.height || leftStep < 0) {
-			console.log("you died : " + leftStep + " > "  + game.height);	
-			leftStep = 0;
-		}
-		if(rightStep > game.height || rightStep < 0) {
-			console.log("you died : " + rightStep + " > "  + game.height);	
-			rightStep = 0;
-		}
+		// Check if gameover
+		this.checkGameOver();
+
+		// Check if won
+		this.checkWon();
 	},
 
 	stepClicked : function(tile, pointer) {
@@ -161,7 +160,20 @@ var Game = {
 	},
 
 	checkGameOver : function() {
-		console.log("check game over");
+		if(leftStep > game.height || leftStep < 0) {
+			console.log("you died : " + leftStep + " > "  + game.height);	
+			leftStep = 0;
+		}
+		if(rightStep > game.height || rightStep < 0) {
+			console.log("you died : " + rightStep + " > "  + game.height);	
+			rightStep = 0;
+		}
+	},
+
+	checkWon : function() {
+		if(speed*level*100) {
+			console.log("You won!");
+		}
 	},
 
 	checkEvenSteps : function() {
