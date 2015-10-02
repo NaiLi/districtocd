@@ -42,7 +42,7 @@ var Game = {
 		tileCollisionGroup = game.physics.p2.createCollisionGroup();
 		game.physics.p2.updateBoundsCollisionGroup();
 		game.physics.p2.setImpactEvents(true);
-		game.physics.p2.gravity.y = -900;
+		game.physics.p2.gravity.y = -1200;
 		game.physics.p2.restitution = 10;
 
 		// Create all tiles
@@ -81,7 +81,7 @@ var Game = {
         boundsAlignH: "left", 
         boundsAlignV: "bottom", 
         wordWrap: true, wordWrapWidth: 300 };
-    scoreText = game.add.text(5, 380, "Score: ", style);
+    scoreText = game.add.text(5, 380, "Score: 0", style);
 
 
 		//shadow = game.add.sprite(0, -tileSize/2-360, 'shadow');
@@ -109,20 +109,21 @@ var Game = {
 
 		//Check if gameover
 		if(leftStep > game.height || leftStep < 0) {
-			console.log("you died : " + leftStep + " > "  + game.height);	
+			//console.log("you died... left    " + leftStep + "  >  " + game.height);	
 			leftStep = 0;
 		}
 		if(rightStep > game.height || rightStep < 0) {
-			console.log("you died : " + rightStep + " > "  + game.height);	
+			//console.log("you died... right   " + rightStep + "  >  " + game.height);
 			rightStep = 0;
 		}
 	},
 
 	stepClicked : function(tile, pointer) {
 
-		tile.targetObject.sprite.alpha = 0.7;
-		this.takeStep(tile.targetObject.sprite.name, Math.ceil(pointer.y/tileSize)*tileSize);
-
+		if(tile.targetObject) {
+			tile.targetObject.sprite.alpha = 0.7;
+			this.takeStep(tile.targetObject.sprite.name, Math.ceil(pointer.y/tileSize)*tileSize);			
+		}
 	},
 
 	takeStep : function (type, stepY) {
@@ -145,9 +146,9 @@ var Game = {
 	},
 
 	addResultTile : function(type, direction) { //direction: 0: left, 1: right
-		//var x = direction*(cols/2)*tileSize;
-		var x = direction*(cols/2)*tileSize + 60;// + (cols/2)*tileSize;
-		var y = ((noSteppedTiles[direction]-1)*tileSize/2);
+
+		var x = direction*(cols/2)*tileSize + tileSize*1.5;// + 60;
+		var y = noSteppedTiles[direction]*(tileSize/2-1); //TODO remove frome nosteppedtiles when removing score tile
 		var resultTile = game.add.sprite(x, y, 'tile_wide');
 		resultTile.tint = colors[type];
 		resultTile.name = type;
@@ -156,6 +157,9 @@ var Game = {
 
 		resultTile.body.setCollisionGroup(tileCollisionGroup);
 		resultTile.body.collides(tileCollisionGroup);
+		resultTile.body.angularVelocity = 0;
+		resultTile.body.setZeroDamping();
+		resultTile.body.mass = 1;
 
 		//shadow.y = (Math.ceil(steps/2)-1)*tileSize/2-360;
 	},
@@ -167,7 +171,6 @@ var Game = {
 	checkEvenSteps : function() {
 		for(var type = 0; type < numberOfTypes; type++) {
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
-				console.log("yey! Stepped " + steppedTiles[0][type] + " on " + type);
 				
 				score += steppedTiles[0][type]*1000;
 				scoreText.text = "Score: " + score;
@@ -181,14 +184,14 @@ var Game = {
 
 	clearScoreTiles : function(type) {
 		
-		console.log("l : " + scoreTiles.children.length);
 		var length = scoreTiles.children.length;
-		var toRemove = [];
 
 		// Check for tiles to remove
 		for (var i = 0; i < scoreTiles.children.length; i++) {
 			if(scoreTiles.children[i].name == type) {
 				var s = scoreTiles.children[i];
+				var directionReduce = (s.x < 100) ? 0 : 1;
+				noSteppedTiles[directionReduce]--;
 				scoreTiles.remove(s);
 				s.destroy();
 				i--;
