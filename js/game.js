@@ -6,6 +6,8 @@ var rowIndex = rows;
 
 var score = 0;
 var scoreText;
+var lvlText;
+var flashText; 
 
 var numberOfTypes = 4;
 var groundTiles;
@@ -15,6 +17,7 @@ var noSteppedTiles = [];
 var tileCollisionGroup;
 
 var speed = 1;
+var level = 1;
 var levelTime = 1000;
 var pause = false;
 
@@ -42,19 +45,20 @@ var Game = {
 	create : function () {
 
 		// Physics
+		/*
 		game.physics.startSystem(Phaser.Physics.P2JS);
 		tileCollisionGroup = game.physics.p2.createCollisionGroup();
 		game.physics.p2.updateBoundsCollisionGroup();
 		game.physics.p2.setImpactEvents(true);
 		game.physics.p2.gravity.y = -1200;
-		game.physics.p2.restitution = 10;
+		game.physics.p2.restitution = 10;*/
 
 		// Create all tiles
 		groundTiles = game.add.group();
 		scoreTiles = game.add.group();
 
-		scoreTiles.enableBody = true;
-    scoreTiles.physicsBodyType = Phaser.Physics.P2JS;
+		//scoreTiles.enableBody = true;
+    //scoreTiles.physicsBodyType = Phaser.Physics.P2JS;
 
 		steppedTiles[0] = [];
 		steppedTiles[1] = [];
@@ -79,14 +83,19 @@ var Game = {
 		leftStep = 0;
 		rightStep = 0;
 
-    // Score text
-    var style = { font: "16px Arial", fill: "#fff", 
-        align: "left", // the alignment of the text is independent of the bounds, try changing to 'center' or 'right'
-        boundsAlignH: "left", 
-        boundsAlignV: "bottom", 
-        wordWrap: true, wordWrapWidth: 300 };
-    scoreText = game.add.text(5, 380, "Score: 0", style);
+    // Top bar
+		var topBarOne = game.add.sprite(0, 0, 'tile_wide');
+		var topBarTwo = game.add.sprite(tileSize*cols/2, 0, 'tile_wide');
+		topBarOne.tint = 0x000000;
+		topBarTwo.tint = 0x000000;
 
+    // Score text
+    var styleBar 		= { font: "14px Arial", fill: "#fff"};
+    var styleFlash 	= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3};
+    scoreText 	= game.add.text(5, 2, "Score: 0", styleBar);
+    lvlText 		= game.add.text(170, 2, "Level: 1", styleBar);
+    flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,styleFlash);
+			flashText.anchor.setTo(0.5);
 
 		//shadow = game.add.sprite(0, -tileSize/2-360, 'shadow');
 
@@ -152,16 +161,22 @@ var Game = {
 
 	addResultTile : function(type, direction) { //direction: 0: left, 1: right
 
-		var x = direction*(cols/2)*tileSize + tileSize*1.5;// + 60;
-		var y = noSteppedTiles[direction]*(tileSize/2-1); //TODO remove frome nosteppedtiles when removing score tile
+		var x = direction*(cols/2)*tileSize;// + tileSize*1.5;// + 60;
+		var y = noSteppedTiles[direction]*(tileSize/2)+(tileSize/2); //TODO remove frome nosteppedtiles when removing score tile
 		var resultTile = game.add.sprite(x, y, 'tile_wide');
 		resultTile.tint = colors[type];
 		resultTile.name = type;
 
 		scoreTiles.add(resultTile);
 
-		resultTile.body.setCollisionGroup(tileCollisionGroup);
-		resultTile.body.collides(tileCollisionGroup);
+		var fall = game.add.tween(resultTile);
+
+    fall.to({ y: y-(tileSize/2) }, 300);
+    fall.start();
+
+
+		//resultTile.body.setCollisionGroup(tileCollisionGroup);
+		//resultTile.body.collides(tileCollisionGroup);
 
 /*
 		resultTile.body.angularVelocity = 0;
@@ -197,8 +212,14 @@ var Game = {
 		for(var type = 0; type < numberOfTypes; type++) {
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
 				
-				score += steppedTiles[0][type]*1000;
+				var addedScore = steppedTiles[0][type]*1000; // TODO make this more awesome
+				score += addedScore;
 				scoreText.text = "Score: " + score;
+
+				flashText.alpha = 1.0;
+				flashText.text = addedScore;
+				game.add.tween(flashText).to( { alpha: 0.0 }, 1000).start();
+
 
 				steppedTiles[0][type] = 0;
 				steppedTiles[1][type] = 0;
@@ -209,18 +230,64 @@ var Game = {
 
 	clearScoreTiles : function(type) {
 		
-		var length = scoreTiles.children.length;
+		// Check for tiles to remove, make them glow
+		for (var i = 0; i < scoreTiles.children.length; i++) {
+			if(scoreTiles.children[i].name == type) {
 
-		// Check for tiles to remove
+				var s = scoreTiles.children[i];
+				var glow = game.add.tween(s);
+
+				glow.to({ tint : 0xffffff }, 500)
+					  .to({ alpha : 0.0 }, 1000);
+				glow.onComplete.add(this.removeTiles, this);
+	    	glow.start();
+			}
+		}
+	},
+
+	removeTiles : function(tile) {
+
+		var type = tile.name;
+
+		// Remove tiles 
 		for (var i = 0; i < scoreTiles.children.length; i++) {
 			if(scoreTiles.children[i].name == type) {
 				var s = scoreTiles.children[i];
 
-				var directionReduce = (s.x < 100) ? 0 : 1;
+				var directionReduce = (s.x < 100) ? 0 : 1; // Which side to remove from
 				noSteppedTiles[directionReduce]--;
 				scoreTiles.remove(s);
-				s.destroy();
+				//s.destroy();
 				i--;
+			}
+		}
+		// Let the other tiles fall down ones the other ones are removed
+		this.scoreTilesFall();
+	},
+
+	scoreTilesFall : function() {
+
+		var left = 1;
+		var right = 1;
+
+		for (var i = 0; i < scoreTiles.children.length; i++) {
+
+			var s = scoreTiles.children[i];
+			var directionReduce = (s.x < 100) ? 0 : 1; // Which side to remove from
+			
+			if(directionReduce == 0) { // if left side
+				var fall = game.add.tween(s);
+
+				fall.to({ y: left*(tileSize/2) }, 300);
+	    	fall.start();
+	    	left++;
+
+			} else {
+				var fall = game.add.tween(s);
+
+				fall.to({ y: right*(tileSize/2) }, 300);
+	    	fall.start();
+	    	right++;
 			}
 		}
 	},
@@ -280,5 +347,5 @@ var Game = {
 			newTile.name = randomValue;
 			groundTiles.add(newTile);
 		}
-	}
+	},
 };
