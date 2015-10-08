@@ -15,7 +15,8 @@ var noSteppedTiles = [];
 var tileCollisionGroup;
 
 var speed = 1;
-var level = 1;
+var levelTime = 1000;
+var pause = false;
 
 var steps = 0;
 var leftStep;
@@ -24,17 +25,17 @@ var rightStep;
 var shadow;
 
 var colors = {
-					0:0x32687A,
-					1:0x68327A,
-					2:0x7A4432,
-					3:0x327A75
+					0:0x32687A,	//blueish
+					1:0x68327A, //purple (2:0x7A4432, //brown)
+					2:0xffff88, //yellow (3:0x327A75	//greenish)
+					3:0x999999	//grey
 				}
 
 var Game = {
 
 	preload : function() {
 		game.load.image('tile', 'assets/tile.png');
-		game.load.image('shadow', 'assets/shadow.png');
+		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
 	},
 
@@ -102,27 +103,32 @@ var Game = {
 
 	update : function() {
 		
-		groundTiles.y += speed;
-		leftStep += speed;
-		rightStep += speed;
+		if(!pause) {
 
-		if(groundTiles.y%tileSize == 0) {
-			this.newRow(rowIndex--);
+			groundTiles.y += speed;
+			leftStep += speed;
+			rightStep += speed;
+
+			if(groundTiles.y%tileSize == 0) {
+				this.newRow(rowIndex--);
+			}
+
+			// Check if gameover
+			//this.checkGameOver();
+
+			// Check if won
+			//this.checkWon();
 		}
-
-		// Check if gameover
-		this.checkGameOver();
-
-		// Check if won
-		this.checkWon();
 	},
 
 	stepClicked : function(tile, pointer) {
 
-		if(tile.targetObject) {
-			tile.targetObject.sprite.alpha = 0.7;
-			this.takeStep(tile.targetObject.sprite.name, Math.ceil(pointer.y/tileSize)*tileSize);			
-		}
+		if(!pause) {
+			if(tile.targetObject) {
+				tile.targetObject.sprite.alpha = 0.7;
+				this.takeStep(tile.targetObject.sprite.name, tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize);
+			}
+		} 
 	},
 
 	takeStep : function (type, stepY) {
@@ -167,19 +173,24 @@ var Game = {
 
 	checkGameOver : function() {
 		if(leftStep > game.height || leftStep < 0) {
-			console.log("you died : " + leftStep + " > "  + game.height);	
 			leftStep = 0;
+			this.pauseGame();
 		}
 		if(rightStep > game.height || rightStep < 0) {
-			console.log("you died : " + rightStep + " > "  + game.height);	
 			rightStep = 0;
+			this.pauseGame();
 		}
 	},
 
 	checkWon : function() {
-		if(speed*level*100) {
+		if(groundTiles.y > levelTime) {
 			console.log("You won!");
+			this.pauseGame();
 		}
+	},
+
+	pauseGame : function() {
+		pause = true;
 	},
 
 	checkEvenSteps : function() {
@@ -230,6 +241,7 @@ var Game = {
 				newTile.input.pixelPerfectClick = true;
 				newTile.tint = colors[randomValue];
 				newTile.name = randomValue;
+				newTile.initialYPosition = (i-1)*tileSize;
 				newTile.checkWorldBounds = true;
 				newTile.outOfBoundsKill = true;
 				groundTiles.add(newTile);
