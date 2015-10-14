@@ -7,9 +7,11 @@ var rowIndex = rows;
 var score = 0;
 var scoreText;
 var lvlText;
-var flashText; 
+var flashText;
+var barStyle;
+var flashStyle;
 
-var numberOfTypes = 4;
+var numberOfTypes = 3;
 var groundTiles;
 var scoreTiles;
 var steppedTiles = [];
@@ -18,7 +20,7 @@ var tileCollisionGroup;
 
 var speed = 1;
 var level = 1;
-var levelTime = 1000;
+var levelTime = 500;
 var pause = false;
 
 var steps = 0;
@@ -28,9 +30,9 @@ var rightStep;
 var shadow;
 
 var colors = {
-					0:0x32687A,	//blueish
-					1:0x68327A, //purple (2:0x7A4432, //brown)
-					2:0xffff88, //yellow (3:0x327A75	//greenish)
+					0:0x68327A, //purple (2:0x7A4432, //brown)
+					1:0xffff88, //yellow (3:0x327A75	//greenish)
+					2:0x32687A,	//blueish
 					3:0x999999	//grey
 				}
 
@@ -40,6 +42,7 @@ var Game = {
 		game.load.image('tile', 'assets/tile.png');
 		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
+		game.load.image('transbox', 'assets/blackbox.png');
 	},
 
 	create : function () {
@@ -89,13 +92,17 @@ var Game = {
 		topBarOne.tint = 0x000000;
 		topBarTwo.tint = 0x000000;
 
+		// Text styles
+    barStyle 					= { font: "14px Arial", fill: "#fff"};
+    flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center"};
+
     // Score text
-    var styleBar 		= { font: "14px Arial", fill: "#fff"};
-    var styleFlash 	= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3};
-    scoreText 	= game.add.text(5, 2, "Score: 0", styleBar);
-    lvlText 		= game.add.text(170, 2, "Level: 1", styleBar);
-    flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,styleFlash);
+    scoreText 	= game.add.text(5, 2, "Score: 0", barStyle);
+    lvlText 		= game.add.text(170, 2, "Level: 1", barStyle);
+    flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,flashStyle);
 			flashText.anchor.setTo(0.5);
+    flashText.wordWrap = true;
+    flashText.wordWrapWidth = window.innerWidth - 50;
 
 		//shadow = game.add.sprite(0, -tileSize/2-360, 'shadow');
 
@@ -118,6 +125,7 @@ var Game = {
 			leftStep += speed;
 			rightStep += speed;
 
+			// Create new top row 
 			if(groundTiles.y%tileSize == 0) {
 				this.newRow(rowIndex--);
 			}
@@ -126,7 +134,7 @@ var Game = {
 			//this.checkGameOver();
 
 			// Check if won
-			//this.checkWon();
+			this.checkWon();
 		}
 	},
 
@@ -137,7 +145,7 @@ var Game = {
 				tile.targetObject.sprite.alpha = 0.7;
 				this.takeStep(tile.targetObject.sprite.name, tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize);
 			}
-		} 
+		}
 	},
 
 	takeStep : function (type, stepY) {
@@ -189,23 +197,29 @@ var Game = {
 	checkGameOver : function() {
 		if(leftStep > game.height || leftStep < 0) {
 			leftStep = 0;
-			this.pauseGame();
+			this.pauseGame(true);
 		}
 		if(rightStep > game.height || rightStep < 0) {
 			rightStep = 0;
-			this.pauseGame();
+			this.pauseGame(true);
 		}
 	},
 
-	checkWon : function() {
-		if(groundTiles.y > levelTime) {
-			console.log("You won!");
-			this.pauseGame();
+	checkWon : function() { // TODO level up on time or score?
+		//if(groundTiles.y > levelTime) {
+		if(score >= level*3000) {
+			//this.pauseGame(true); // TODO should it freeze for a moment?
+			this.createFlashMessage(score + "!\nLevel up!", 2000);
+			level++;
+			//speed += 0.1; //TODO make better progression, solve this
+			levelTime += 700;
+			lvlText.text = "Level " + level;
+
 		}
 	},
 
-	pauseGame : function() {
-		pause = true;
+	pauseGame : function(bool) {
+		pause = bool;
 	},
 
 	checkEvenSteps : function() {
@@ -216,16 +230,21 @@ var Game = {
 				score += addedScore;
 				scoreText.text = "Score: " + score;
 
-				flashText.alpha = 1.0;
-				flashText.text = addedScore;
-				game.add.tween(flashText).to( { alpha: 0.0 }, 1000).start();
-
+				this.createFlashMessage(addedScore, 1000);
 
 				steppedTiles[0][type] = 0;
 				steppedTiles[1][type] = 0;
 				this.clearScoreTiles(type);
 			}
 		}
+	},
+
+	createFlashMessage : function(text, duration) {
+
+		flashText.alpha = 1.0;
+		flashText.text = text;
+		game.add.tween(flashText).to( { alpha: 0.0 }, duration).start();
+
 	},
 
 	clearScoreTiles : function(type) {
