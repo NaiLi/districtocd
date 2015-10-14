@@ -12,4 +12,4 @@ game.state.add('Intro', Intro);
 game.state.add('Menu', Menu);
 game.state.add('Game', Game);
 
-game.state.start('Game');
+game.state.start('Menu');
