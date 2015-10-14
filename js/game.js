@@ -164,7 +164,10 @@ var Game = {
 			if(tile.targetObject) {
 				tile.targetObject.sprite.alpha = 0.7;
 				//tile.targetObject.sprite.inputEnabled = false;
-				this.takeStep(tile.targetObject.sprite.name, pointer.layerY, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
+				console.log(pointer.y);
+				console.log(tile.y);
+				console.log(tile)
+				this.takeStep(tile.targetObject.sprite.name, tile.y, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
 			}
 		}
 	},
@@ -230,6 +233,7 @@ var Game = {
 	},
 
 	checkGameOver : function() {
+
 		if(leftStep > game.height || leftStep < 0) {
 			leftStep = 0;
 			this.pauseGame(true);
