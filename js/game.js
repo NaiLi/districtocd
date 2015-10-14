@@ -45,7 +45,7 @@ var Game = {
 		game.load.image('tile', 'assets/tile.png');
 		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
-		game.load.image('transbox', 'assets/blackbox.png');
+		//game.load.image('transbox', 'assets/blackbox.png');
 		game.load.image('shoeprint_right', 'assets/shoeprint_right.png');
 		game.load.image('shoeprint_left', 'assets/shoeprint_left.png');
 	},
