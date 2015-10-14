@@ -4,30 +4,33 @@ var cols = 6;
 var rows = 10;
 var rowIndex = rows;
 
+// Game vars
 var score = 0;
+var numberOfTypes = 2;
+var steppedTiles = [];
+var noSteppedTiles = [];
+var speed = 1;
+var level = 1;
+var levelTime = 500;
+var time = 0;
+var pause = false;
+var steps = 0;
+var leftStep;
+var rightStep;
+
+// Texts
 var scoreText;
 var lvlText;
 var flashText;
 var barStyle;
 var flashStyle;
 
-var numberOfTypes = 3;
-var groundTiles;
+// Sprite groups
+var footSteps;
 var scoreTiles;
-var steppedTiles = [];
-var noSteppedTiles = [];
-var tileCollisionGroup;
-
-var speed = 1;
-var level = 1;
-var levelTime = 500;
-var pause = false;
-
-var steps = 0;
-var leftStep;
-var rightStep;
-
-var shadow;
+var groundTiles;
+//var tileCollisionGroup;
+//var shadow;
 
 var colors = {
 					0:0x68327A, //purple (2:0x7A4432, //brown)
@@ -43,6 +46,8 @@ var Game = {
 		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
 		game.load.image('transbox', 'assets/blackbox.png');
+		game.load.image('shoeprint_right', 'assets/shoeprint_right.png');
+		game.load.image('shoeprint_left', 'assets/shoeprint_left.png');
 	},
 
 	create : function () {
@@ -58,6 +63,7 @@ var Game = {
 
 		// Create all tiles
 		groundTiles = game.add.group();
+		footSteps = game.add.group();
 		scoreTiles = game.add.group();
 
 		//scoreTiles.enableBody = true;
@@ -86,6 +92,15 @@ var Game = {
 		leftStep = 0;
 		rightStep = 0;
 
+		// Feet
+		leftFoot 	= game.add.sprite(0, -1000, 'shoeprint_left');
+		rightFoot = game.add.sprite(0, -1000, 'shoeprint_right');
+		/*
+		leftFoot.anchor.setTo(0.5);
+		rightFoot.anchor.setTo(0.5);
+		footSteps.add(leftFoot);
+		footSteps.add(rightFoot);*/
+
     // Top bar
 		var topBarOne = game.add.sprite(0, 0, 'tile_wide');
 		var topBarTwo = game.add.sprite(tileSize*cols/2, 0, 'tile_wide');
@@ -93,15 +108,15 @@ var Game = {
 		topBarTwo.tint = 0x000000;
 
 		// Text styles
-    barStyle 					= { font: "14px Arial", fill: "#fff"};
-    flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center"};
+    barStyle 					= { font: "14px Arial", fill: "#fff" };
+    flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
 
     // Score text
     scoreText 	= game.add.text(5, 2, "Score: 0", barStyle);
     lvlText 		= game.add.text(170, 2, "Level: 1", barStyle);
     flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,flashStyle);
 			flashText.anchor.setTo(0.5);
-    flashText.wordWrap = true;
+    flashText.wordWrap 			= true;
     flashText.wordWrapWidth = window.innerWidth - 50;
 
 		//shadow = game.add.sprite(0, -tileSize/2-360, 'shadow');
@@ -110,28 +125,33 @@ var Game = {
 		game.input.onDown.add(this.stepClicked, this);
 
 		// Responsiveness
-		game.scale.pageAlignHorizontally = true;
-		game.scale.pageAlignVertically = true;
-		game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL; //RESIZE? (better for desktop)
+		game.scale.pageAlignHorizontally		= true;
+		game.scale.pageAlignVertically			= true;
+		game.scale.scaleMode								= Phaser.ScaleManager.SHOW_ALL; //RESIZE? (better for desktop)
 		game.scale.setScreenSize(true);
 
 	},
 
 	update : function() {
+
+		time++;
 		
 		if(!pause) {
 
-			groundTiles.y += speed;
-			leftStep += speed;
-			rightStep += speed;
+			//console.log("time " + time);
+			groundTiles.y 	+= speed;
+			leftStep 				+= speed;
+			rightStep 			+= speed;
+			leftFoot.y 			+= speed;
+			rightFoot.y 		+= speed;
 
 			// Create new top row 
-			if(groundTiles.y%tileSize == 0) {
+			if(groundTiles.y%tileSize < speed) {
 				this.newRow(rowIndex--);
 			}
 
 			// Check if gameover
-			//this.checkGameOver();
+			this.checkGameOver();
 
 			// Check if won
 			this.checkWon();
@@ -143,12 +163,13 @@ var Game = {
 		if(!pause) {
 			if(tile.targetObject) {
 				tile.targetObject.sprite.alpha = 0.7;
-				this.takeStep(tile.targetObject.sprite.name, tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize);
+				//tile.targetObject.sprite.inputEnabled = false;
+				this.takeStep(tile.targetObject.sprite.name, pointer.layerY, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
 			}
 		}
 	},
 
-	takeStep : function (type, stepY) {
+	takeStep : function (type, stepY, stepX) {
 
 		steps++;
 
@@ -157,13 +178,27 @@ var Game = {
 			noSteppedTiles[0]++;
 			this.addResultTile(type, 0);
 			leftStep = stepY;
+
+			leftFoot.destroy();
+			leftFoot 	= game.add.sprite(stepX+tileSize/2, stepY+tileSize/2, 'shoeprint_left');
+			leftFoot.anchor.setTo(0.5);
+
+
+			//leftFoot.x = stepX+tileSize/2;
+			//leftFoot.y = stepY-tileSize/2;
 		} else {											// If right foot
 			steppedTiles[1][type]++;
 			noSteppedTiles[1]++;
 			this.addResultTile(type, 1);
 			rightStep = stepY;
-		}
 
+			rightFoot.destroy();
+			rightFoot 	= game.add.sprite(stepX+tileSize/2, stepY+tileSize/2, 'shoeprint_right');
+			rightFoot.anchor.setTo(0.5);
+
+			//rightFoot.x = stepX+tileSize/2;
+			//rightFoot.y = stepY+tileSize/2;
+		}
 		this.checkEvenSteps();
 	},
 
@@ -198,10 +233,12 @@ var Game = {
 		if(leftStep > game.height || leftStep < 0) {
 			leftStep = 0;
 			this.pauseGame(true);
+			this.createFlashMessage("Game over");
 		}
 		if(rightStep > game.height || rightStep < 0) {
 			rightStep = 0;
 			this.pauseGame(true);
+			this.createFlashMessage("Game over");
 		}
 	},
 
@@ -211,9 +248,15 @@ var Game = {
 			//this.pauseGame(true); // TODO should it freeze for a moment?
 			this.createFlashMessage(score + "!\nLevel up!", 2000);
 			level++;
-			//speed += 0.1; //TODO make better progression, solve this
+			speed += 0.1; //TODO make better progression, solve this
 			levelTime += 700;
 			lvlText.text = "Level " + level;
+
+			if(level == 5) {
+				steppedTiles[0][numberOfTypes] = 0;
+				steppedTiles[1][numberOfTypes] = 0;
+				numberOfTypes++;
+			}
 
 		}
 	},
