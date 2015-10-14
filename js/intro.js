@@ -113,8 +113,8 @@ var Intro = {
       tileOne.tint = colors[0];
       tileTwo.tint = colors[0];
 
-      var skipBtn = this.add.button(window.innerWidth-70, game.world.centerY*2-30, 'skip_btn', this.startGame, this); //CHANGE WHAT HAPPENS
-      skipBtn.anchor.setTo(0.5);
+      var skipBtn = this.add.button(game.width-20, game.height-20, 'skip_btn', this.startGame, this); //CHANGE WHAT HAPPENS
+      skipBtn.anchor.setTo(1);
       
       // Event when clicking on tile
       game.input.onDown.add(this.stepClicked, this);
