@@ -113,10 +113,6 @@ var Intro = {
       tileOne.tint = colors[0];
       tileTwo.tint = colors[0];
 
-
-      console.log(window.innerWidth-50) 
-      console.log(window.innerHeight-50);
-      
       var skipBtn = this.add.button(window.innerWidth-70, game.world.centerY*2-30, 'skip_btn', this.startGame, this); //CHANGE WHAT HAPPENS
       skipBtn.anchor.setTo(0.5);
       
@@ -231,9 +227,10 @@ var Intro = {
 
     stepClicked : function(tile, pointer) {
 
-      if(tile.targetObject.sprite.key == "tile") {
 
-        if(tile.targetObject) {
+      if(tile.targetObject) {
+      
+        if(tile.targetObject.sprite.key == "tile") {
           tile.targetObject.sprite.inputEnabled = false;
   //        tile.targetObject.sprite.alpha = 0.7;
           this.nextInstruction(tile.targetObject.sprite.name);
