@@ -7,7 +7,7 @@ var Menu = {
         game.load.image('urban', './assets/urban-menu.png');
         game.load.image('start', './assets/button-start.png');
         game.load.image('score', './assets/button-score.png');
-        game.load.image('bg', './assets/yellowBG.png');
+        //game.load.image('bg', './assets/yellowBG.png');
     },
 
     create: function () {
