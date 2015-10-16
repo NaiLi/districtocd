@@ -133,9 +133,9 @@ var Game = {
 
 		if(!pause) {
 			if(tile.targetObject) {
-				tile.targetObject.sprite.alpha = 0.7;
-				//tile.targetObject.sprite.inputEnabled = false;
-				this.takeStep(tile.targetObject.sprite.name, tile.y, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
+				tile.targetObject.sprite.alpha = 0.5;
+				var y = groundTiles.y+tile.targetObject.sprite.y;
+				this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
 			}
 		}
 	},
@@ -433,9 +433,9 @@ var Game = {
 				newTile.input.pixelPerfectClick = true;
 				newTile.tint = colors[randomValue];
 				newTile.name = randomValue;
-				newTile.initialYPosition = (i-1)*tileSize;
 				newTile.checkWorldBounds = true;
 				newTile.outOfBoundsKill = true;
+				newTile.alpha = 0.85;
 				groundTiles.add(newTile);
 			}
 		}
@@ -466,6 +466,7 @@ var Game = {
 				groundTiles.add(newTile);
 			}
 
+			newTile.alpha = 0.85;
 			newTile.inputEnabled = true;
 			newTile.input.pixelPerfectClick = true;
 			newTile.tint = colors[randomValue];
