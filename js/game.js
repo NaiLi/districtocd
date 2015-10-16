@@ -11,7 +11,8 @@ var steppedTiles;
 var noSteppedTiles;
 var speed;
 var level;
-var levelTime = 500;
+var levelTime = 400;
+var levelTimeIncrease = 400;
 var time;
 var pause;
 var steps;
@@ -29,9 +30,9 @@ var boxStyle;
 var textSprite;
 
 // Text styles
-var barStyle 					= { font: "14px Arial", fill: "#fff" };
+var barStyle 					= { font: "14px Arial", fill: "#fff", align: "center" };
 var flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
-var boxStyle					= { font: "20px Arial", fill: "#fff", stroke: "black", strokeThickness: 1, align: "center" };
+var boxStyle					= { font: "14px Arial", fill: "#fff", stroke: "black", strokeThickness: 1, align: "center" };
 
 // Sprite groups
 var footSteps;
@@ -45,6 +46,11 @@ var barGroup;
 var transbox;
 var retryBtn;
 var menuBtn;
+var gotitBtn;
+
+// Messages
+var message = ["Take as many steps with each foot on the same color.", "Mind your steps,\ndon't walk too slow!", "Maybe we have to send you back to the hospital..."];
+var messageNo = 0;
 
 // Instructions
 var showInstruction = 1;
@@ -68,6 +74,7 @@ var Game = {
 		game.load.image('up', 'assets/upArrow.png');
 		game.load.image('retry', './assets/retryBtn.png');
 		game.load.image('menu', './assets/menuBtn.png');
+		game.load.image('gotit', './assets/gotitBtn.png');
 	},
 
 	create : function () {
@@ -111,6 +118,8 @@ var Game = {
 			if(groundTiles.y%tileSize < speed) {
 				this.newRow(rowIndex--);
 			}
+
+
 
 			// Check if gameover
 			this.checkGameOver();
@@ -207,18 +216,28 @@ var Game = {
 			
 			this.pauseGame(true);
 			//this.createFlashMessage("Game over");
-			this.displayInstruction(2);
+			this.displayInstruction(-1);
+		}
+
+		// If not game over, check if any instructions
+		if(noSteppedTiles[0] == 3 && showInstruction == 1) {
+			this.displayInstruction(showInstruction);
+			showInstruction = 2;
+		} else if(steps == 16 && noSteppedTiles[0] < 2 && showInstruction == 2)  {
+			this.displayInstruction(showInstruction);
+			showInstruction = 0;
 		}
 	},
 
 	checkWon : function() { // TODO level up on time or score?
-		//if(groundTiles.y > levelTime) {
-		if(score >= level*3000) {
+		
+		if(time > levelTime) {
+		//if(score >= level*3000) {
 			//this.pauseGame(true); // TODO should it freeze for a moment?
 			this.createFlashMessage(score + "!\nLevel up!", 2000);
 			level++;
 			speed += 0.1; //TODO make better progression, solve this
-			levelTime += 700;
+			levelTime += levelTimeIncrease;
 			lvlText.text = "Level " + level;
 
 			if(level == 5) {
@@ -240,12 +259,7 @@ var Game = {
 		for(var type = 0; type < numberOfTypes; type++) {
 
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
-	
-				if(showInstruction == 1) {
-					console.log("show instruction one");
-					//this.displayInstruction(showInstruction);
-					showInstruction = 2;
-				}
+
 				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*1000; // TODO make this more awesome
 				score += addedScore;
 				scoreText.text = "Score: " + score;
@@ -271,23 +285,52 @@ var Game = {
 
 		switch(number) {
 
-			case 1: 
-				this.pauseGame(true);
-				up = game.add.sprite(tileSize*1.5, tileSize*2, 'up');
-				up.anchor.setTo(0.5);
-				up = game.add.sprite(tileSize*1.5+tileSize*3, tileSize*2, 'up');
-				up.anchor.setTo(0.5);
-
+			case 0:
 				break;
-			case 2: // Gameover
+			case 1: // First instruction
+				this.pauseGame(true);
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
 				transbox.alpha = 0.85;
-				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Sorry,\nyou lost your mind...\n\n" + score + " points!\n", boxStyle);
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Remember:\nKeep as many tiles of the same color in each column.", barStyle);
       	textSprite.anchor.x = 0.5;
       	textSprite.anchor.y = 1;
       	textSprite.wordWrap = true;
-      	textSprite.wordWrapWidth = game.world.width - 40;
+      	textSprite.wordWrapWidth = game.world.width - 50;
+
+    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+    		gotitBtn.anchor.x = 0.5;
+    		gotitBtn.anchor.y = 0;
+
+				break;
+
+			case 2: 
+				this.pauseGame(true);
+				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+				transbox.anchor.setTo(0.5);
+				transbox.alpha = 0.85;
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Remember:\nYou get higher scores for removing more tiles at a time.", barStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 1;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 50;
+
+    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+    		gotitBtn.anchor.x = 0.5;
+    		gotitBtn.anchor.y = 0;
+				break;
+
+			case -1: // Gameover
+				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+				transbox.anchor.setTo(0.5);
+				transbox.alpha = 0.85;
+				text = (message[messageNo]) ? message[messageNo] : "you lost your mind...";
+      	messageNo++;
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Game over...\n" + text + "\n" + score + " points!\n", boxStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 1;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 50;
 
   	    // It will act as a button to start the game.
     		retryBtn = this.add.button(game.world.centerX, game.world.centerY, 'retry', this.restartGame, this);
@@ -296,6 +339,9 @@ var Game = {
     
 				menuBtn = this.add.button(game.world.centerX, game.world.centerY+70, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
     		menuBtn.anchor.setTo(0.5);
+				break;
+
+			default:
 				break;
 
 		}
@@ -445,6 +491,18 @@ var Game = {
 		menuBtn.destroy();
 		textSprite.destroy();
 
+		this.pauseGame(false);
+	},
+
+	resumeGame: function() {
+		
+		transbox.destroy();
+		textSprite.destroy();
+		//retryBtn.destroy();
+		//menuBtn.destroy();
+
+		gotitBtn.destroy();
+		
 		this.pauseGame(false);
 	},
 

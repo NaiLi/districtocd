@@ -1,5 +1,5 @@
 var title = "So sorry,\n";
-var message = ["you were too slow...", "you lost your mind..."];
+//var message = ["you were too slow...", "you lost your mind..."];
 
 var GameOver = {
 
