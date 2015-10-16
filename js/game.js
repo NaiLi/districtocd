@@ -5,18 +5,20 @@ var rows = 10;
 var rowIndex = rows;
 
 // Game vars
-var score = 0;
+var score;
 var numberOfTypes = 2;
-var steppedTiles = [];
-var noSteppedTiles = [];
-var speed = 1;
-var level = 1;
-var levelTime = 500;
-var time = 0;
-var pause = false;
-var steps = 0;
+var steppedTiles;
+var noSteppedTiles;
+var speed;
+var level;
+var levelTime = 400;
+var levelTimeIncrease = 400;
+var time;
+var pause;
+var steps;
 var leftStep;
 var rightStep;
+var gameoverReason = 1;
 
 // Texts
 var scoreText;
@@ -24,13 +26,34 @@ var lvlText;
 var flashText;
 var barStyle;
 var flashStyle;
+var boxStyle;
+var textSprite;
+
+// Text styles
+var barStyle 					= { font: "14px Arial", fill: "#fff", align: "center" };
+var flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
+var boxStyle					= { font: "14px Arial", fill: "#fff", stroke: "black", strokeThickness: 1, align: "center" };
 
 // Sprite groups
 var footSteps;
 var scoreTiles;
 var groundTiles;
+var barGroup;
 //var tileCollisionGroup;
 //var shadow;
+
+// Game over stuff
+var transbox;
+var retryBtn;
+var menuBtn;
+var gotitBtn;
+
+// Messages
+var message = ["Take as many steps with each foot on the same color.", "Mind your steps,\ndon't walk too slow!", "Maybe we have to send you back to the hospital..."];
+var messageNo = 0;
+
+// Instructions
+var showInstruction = 1;
 
 var colors = {
 					0:0x68327A, //purple (2:0x7A4432, //brown)
@@ -45,81 +68,27 @@ var Game = {
 		game.load.image('tile', 'assets/tile.png');
 		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
-		//game.load.image('transbox', 'assets/blackbox.png');
+		game.load.image('transbox', 'assets/blackbox.png');
 		game.load.image('shoeprint_right', 'assets/shoeprint_right.png');
 		game.load.image('shoeprint_left', 'assets/shoeprint_left.png');
+		game.load.image('up', 'assets/upArrow.png');
+		game.load.image('retry', './assets/retryBtn.png');
+		game.load.image('menu', './assets/menuBtn.png');
+		game.load.image('gotit', './assets/gotitBtn.png');
 	},
 
 	create : function () {
 
-		// Physics
-		/*
-		game.physics.startSystem(Phaser.Physics.P2JS);
-		tileCollisionGroup = game.physics.p2.createCollisionGroup();
-		game.physics.p2.updateBoundsCollisionGroup();
-		game.physics.p2.setImpactEvents(true);
-		game.physics.p2.gravity.y = -1200;
-		game.physics.p2.restitution = 10;*/
+		// Reset game values
+		this.resetAll();
 
 		// Create all tiles
-		groundTiles = game.add.group();
-		footSteps = game.add.group();
-		scoreTiles = game.add.group();
+		this.createGroups();
+    this.renderStartTiles();
+    this.createFeet();
+		this.createBar();
+		this.createFlash();
 
-		//scoreTiles.enableBody = true;
-    //scoreTiles.physicsBodyType = Phaser.Physics.P2JS;
-
-		steppedTiles[0] = [];
-		steppedTiles[1] = [];
-		noSteppedTiles[0] = 0;
-		noSteppedTiles[1] = 0;
-
-		// Set no steps taken on each type
-		for(var i=0; i < numberOfTypes; i++) {
-			steppedTiles[0][i] = 0;
-			steppedTiles[1][i] = 0;
-		}
-
-		// Add all tiles
-		for(; rowIndex >= 0; rowIndex--) {
-			this.createNewRow(rowIndex);
-		}
-		//Create some dead tiles for recycling
-		this.createNewRow(-1);
-		
-		// y coordinates of steps taken
-		// TODO might be possible to have only one var and check which one is lowest
-		leftStep = 0;
-		rightStep = 0;
-
-		// Feet
-		leftFoot 	= game.add.sprite(0, -1000, 'shoeprint_left');
-		rightFoot = game.add.sprite(0, -1000, 'shoeprint_right');
-		/*
-		leftFoot.anchor.setTo(0.5);
-		rightFoot.anchor.setTo(0.5);
-		footSteps.add(leftFoot);
-		footSteps.add(rightFoot);*/
-
-    // Top bar
-		var topBarOne = game.add.sprite(0, 0, 'tile_wide');
-		var topBarTwo = game.add.sprite(tileSize*cols/2, 0, 'tile_wide');
-		topBarOne.tint = 0x000000;
-		topBarTwo.tint = 0x000000;
-
-		// Text styles
-    barStyle 					= { font: "14px Arial", fill: "#fff" };
-    flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
-
-    // Score text
-    scoreText 	= game.add.text(5, 2, "Score: 0", barStyle);
-    lvlText 		= game.add.text(170, 2, "Level: 1", barStyle);
-    flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,flashStyle);
-			flashText.anchor.setTo(0.5);
-    flashText.wordWrap 			= true;
-    flashText.wordWrapWidth = window.innerWidth - 50;
-
-		//shadow = game.add.sprite(0, -tileSize/2-360, 'shadow');
 
 		// Event when clicking on tile
 		game.input.onDown.add(this.stepClicked, this);
@@ -149,6 +118,8 @@ var Game = {
 			if(groundTiles.y%tileSize < speed) {
 				this.newRow(rowIndex--);
 			}
+
+
 
 			// Check if gameover
 			this.checkGameOver();
@@ -233,24 +204,40 @@ var Game = {
 
 		if(leftStep > game.height || leftStep < 0) {
 			leftStep = 0;
+			//game.state.start("GameOver");
+			
 			this.pauseGame(true);
-			this.createFlashMessage("Game over");
+			//this.createFlashMessage("Game over");
+			this.displayInstruction(2);
 		}
 		if(rightStep > game.height || rightStep < 0) {
 			rightStep = 0;
+			//game.state.start("GameOver");
+			
 			this.pauseGame(true);
-			this.createFlashMessage("Game over");
+			//this.createFlashMessage("Game over");
+			this.displayInstruction(-1);
+		}
+
+		// If not game over, check if any instructions
+		if(noSteppedTiles[0] == 3 && showInstruction == 1) {
+			this.displayInstruction(showInstruction);
+			showInstruction = 2;
+		} else if(steps == 16 && noSteppedTiles[0] < 2 && showInstruction == 2)  {
+			this.displayInstruction(showInstruction);
+			showInstruction = 0;
 		}
 	},
 
 	checkWon : function() { // TODO level up on time or score?
-		//if(groundTiles.y > levelTime) {
-		if(score >= level*3000) {
+		
+		if(time > levelTime) {
+		//if(score >= level*3000) {
 			//this.pauseGame(true); // TODO should it freeze for a moment?
 			this.createFlashMessage(score + "!\nLevel up!", 2000);
 			level++;
 			speed += 0.1; //TODO make better progression, solve this
-			levelTime += 700;
+			levelTime += levelTimeIncrease;
 			lvlText.text = "Level " + level;
 
 			if(level == 5) {
@@ -264,13 +251,16 @@ var Game = {
 
 	pauseGame : function(bool) {
 		pause = bool;
+		//game.paused = bool; //TODO use this instead
 	},
 
 	checkEvenSteps : function() {
+
 		for(var type = 0; type < numberOfTypes; type++) {
+
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
-				
-				var addedScore = steppedTiles[0][type]*1000; // TODO make this more awesome
+
+				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*1000; // TODO make this more awesome
 				score += addedScore;
 				scoreText.text = "Score: " + score;
 
@@ -289,6 +279,72 @@ var Game = {
 		flashText.text = text;
 		game.add.tween(flashText).to( { alpha: 0.0 }, duration).start();
 
+	},
+
+	displayInstruction : function(number) {
+
+		switch(number) {
+
+			case 0:
+				break;
+			case 1: // First instruction
+				this.pauseGame(true);
+				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+				transbox.anchor.setTo(0.5);
+				transbox.alpha = 0.85;
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Remember:\nKeep as many tiles of the same color in each column.", barStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 1;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 50;
+
+    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+    		gotitBtn.anchor.x = 0.5;
+    		gotitBtn.anchor.y = 0;
+
+				break;
+
+			case 2: 
+				this.pauseGame(true);
+				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+				transbox.anchor.setTo(0.5);
+				transbox.alpha = 0.85;
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Remember:\nYou get higher scores for removing more tiles at a time.", barStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 1;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 50;
+
+    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+    		gotitBtn.anchor.x = 0.5;
+    		gotitBtn.anchor.y = 0;
+				break;
+
+			case -1: // Gameover
+				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+				transbox.anchor.setTo(0.5);
+				transbox.alpha = 0.85;
+				text = (message[messageNo]) ? message[messageNo] : "you lost your mind...";
+      	messageNo++;
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Game over...\n" + text + "\n" + score + " points!\n", boxStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 1;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 50;
+
+  	    // It will act as a button to start the game.
+    		retryBtn = this.add.button(game.world.centerX, game.world.centerY, 'retry', this.restartGame, this);
+    		retryBtn.anchor.x = 0.5;
+    		retryBtn.anchor.y = 0;
+    
+				menuBtn = this.add.button(game.world.centerX, game.world.centerY+70, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
+    		menuBtn.anchor.setTo(0.5);
+				break;
+
+			default:
+				break;
+
+		}
 	},
 
 	clearScoreTiles : function(type) {
@@ -326,6 +382,12 @@ var Game = {
 		}
 		// Let the other tiles fall down ones the other ones are removed
 		this.scoreTilesFall();
+	},
+
+	removeAllTiles : function() {
+
+		groundTiles.destroy();
+		scoreTiles.destroy();
 	},
 
 	scoreTilesFall : function() {
@@ -411,4 +473,117 @@ var Game = {
 			groundTiles.add(newTile);
 		}
 	},
+
+	restartGame: function() {
+
+		this.resetAll();
+
+		this.removeAllTiles();
+
+		this.createGroups();
+
+		this.renderStartTiles();
+		this.createBar();
+		this.createFlash();
+
+		transbox.destroy();
+		retryBtn.destroy();
+		menuBtn.destroy();
+		textSprite.destroy();
+
+		this.pauseGame(false);
+	},
+
+	resumeGame: function() {
+		
+		transbox.destroy();
+		textSprite.destroy();
+		//retryBtn.destroy();
+		//menuBtn.destroy();
+
+		gotitBtn.destroy();
+		
+		this.pauseGame(false);
+	},
+
+  toMenu: function() {
+  	game.state.start("Menu");
+  },
+
+  resetAll: function() {
+  	
+		score = 0;
+		steppedTiles = [];
+		noSteppedTiles = [];
+		speed = 1;
+		level = 1;
+		time = 0;
+		pause = false;
+		steps = 0;
+		numberOfTypes = 2;
+
+		steppedTiles[0] = [];
+		steppedTiles[1] = [];
+		noSteppedTiles[0] = 0;
+		noSteppedTiles[1] = 0;
+
+		// Set no steps taken on each type
+		for(var i=0; i < numberOfTypes; i++) {
+			steppedTiles[0][i] = 0;
+			steppedTiles[1][i] = 0;
+		}
+
+		// y coordinates of steps taken
+		// TODO might be possible to have only one var and check which one is lowest
+		leftStep = 0;
+		rightStep = 0;
+  },
+
+  createGroups: function() {
+		groundTiles = game.add.group();
+		footSteps = game.add.group();
+		scoreTiles = game.add.group();
+		barGroup = game.add.group();
+  },
+
+  renderStartTiles: function() {
+
+		// Add all tiles
+		rowIndex = rows;
+		for(; rowIndex >= 0; rowIndex--) {
+			this.createNewRow(rowIndex);
+		}
+		//Create some dead tiles for recycling
+		this.createNewRow(-1);
+  },
+
+  createFeet: function() {
+		// Feet
+		leftFoot 	= game.add.sprite(0, -1000, 'shoeprint_left');
+		rightFoot = game.add.sprite(0, -1000, 'shoeprint_right');
+		footSteps.add(leftFoot);
+		footSteps.add(rightFoot);
+  },
+
+  createBar: function() {
+  	    // Top bar
+		topBarOne = game.add.sprite(0, 0, 'tile_wide');
+		topBarTwo = game.add.sprite(tileSize*cols/2, 0, 'tile_wide');
+		topBarOne.tint = 0x000000;
+		topBarTwo.tint = 0x000000;
+		barGroup.add(topBarOne);
+		barGroup.add(topBarTwo);
+    // Score text
+    scoreText 	= game.add.text(5, 2, "Score: 0", barStyle);
+    lvlText 		= game.add.text(170, 2, "Level: 1", barStyle);
+    barGroup.add(scoreText);
+    barGroup.add(lvlText);
+  },
+
+  createFlash: function() {
+    flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,flashStyle);
+			flashText.anchor.setTo(0.5);
+    flashText.wordWrap 			= true;
+    flashText.wordWrapWidth = window.innerWidth - 50;
+  }
 };
