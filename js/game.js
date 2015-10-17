@@ -19,6 +19,7 @@ var steps;
 var leftStep;
 var rightStep;
 var gameoverReason = 1;
+var highscore;
 
 // Texts
 var scoreText;
@@ -79,6 +80,8 @@ var Game = {
 	},
 
 	create : function () {
+
+		game.stage.backgroundColor = '#000';
 
 		// Reset game values
 		this.resetAll();
@@ -213,10 +216,12 @@ var Game = {
 		if(leftStep > game.height || leftStep < 0) {
 			leftStep = 0;
 			this.displayInstruction(-1);
+			this.saveScore();
 		}
 		if(rightStep > game.height || rightStep < 0) {
 			rightStep = 0;
 			this.displayInstruction(-1);
+			this.saveScore();
 		}
 	},
 
@@ -365,7 +370,8 @@ var Game = {
 				transbox.alpha = 0.85;
 				text = (message[messageNo]) ? message[messageNo] : "you lost your mind...";
       	messageNo++;
-				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Game over...\n" + text + "\n" + score + " points!\n", boxStyle);
+      	// TODO if new highscore (score > highscore)
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Game over...\nHighscore: " + highscore + "\n" + "Your score: " + score + "\n" + text, boxStyle);
       	textSprite.anchor.x = 0.5;
       	textSprite.anchor.y = 1;
       	textSprite.wordWrap = true;
@@ -565,6 +571,7 @@ var Game = {
 		pause = false;
 		steps = 0;
 		numberOfTypes = 2;
+		highscore = this.getHighscore();
 
 		steppedTiles[0] = [];
 		steppedTiles[1] = [];
@@ -629,5 +636,34 @@ var Game = {
 			flashText.anchor.setTo(0.5);
     flashText.wordWrap 			= true;
     flashText.wordWrapWidth = window.innerWidth - 50;
+  },
+
+  saveScore: function() {
+
+  	var data = JSON.parse(localStorage.getItem('scoreboard'));
+  	if(data && data.score) {
+  		data.score.push(score);
+  		if(score > data.highscore)
+				data.highscore = score;
+    	localStorage.setItem('scoreboard', JSON.stringify(data));
+  	} else {
+  		console.log("creating new magic")
+  		data = {};
+  		data.score = [];
+  		data.score.push(score);
+  		data.highscore = score;
+  		localStorage.setItem('scoreboard', JSON.stringify(data));
+  	}
+  	console.log(data);
+  },
+
+  getHighscore: function() {
+
+  	var data = JSON.parse(localStorage.getItem('scoreboard'));
+  	if(data && data.highscore) {
+  		return data.highscore;
+  	} else {
+  		return 0;
+  	}
   }
 };

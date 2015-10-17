@@ -37,31 +37,10 @@ var Menu = {
 
     startGame: function () {
 
-      /*
-      //State transition plugin
-      var transitionPlugin = game.plugins.add(Phaser.Plugin.StateTransition);
-
-      //define new properties to be tweened, duration, even ease
-      transitionPlugin.settings({
-
-          //how long the animation should take
-          duration: 1500,
-
-          //ease property
-          ease: Phaser.Easing.Exponential.InOut, // default ease /
-
-          //what property should be tweened
-          properties: {
-              alpha: 0,
-              scale: {
-                  x: 1.5,
-                  y: 1.5
-              }
-          }
-      });
-
-      //Change state
-      transitionPlugin.to("Intro");*/
-      game.state.start("Intro");
+      var introPlayed = JSON.parse(localStorage.getItem('intro_played'));
+      if(introPlayed)
+        game.state.start("Game");
+      else
+        game.state.start("Intro");
     }
 }
