@@ -15,6 +15,6 @@ var game = new Phaser.Game(tileSize*cols, tileSize*rows, Phaser.AUTO, '');
 game.state.add('Intro', Intro);
 game.state.add('Menu', Menu);
 game.state.add('Game', Game);
-//game.state.add('GameOver', GameOver);
+game.state.add('Scoreboard', Scoreboard);
 
 game.state.start('Menu');

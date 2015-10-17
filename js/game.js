@@ -323,6 +323,8 @@ var Game = {
 				break;
 
 			case 2: // First instruction
+				if(introduced)
+					break;
 				this.pauseGame(true);
 				showInstruction = 0;
 				instructionsShown[number] = true;
@@ -343,6 +345,8 @@ var Game = {
 				break;
 
 			case 3: 
+				if(introduced)
+					break;
 				this.pauseGame(true);
 				showInstruction = 0;
 				instructionsShown[number] = true;

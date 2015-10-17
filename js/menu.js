@@ -1,4 +1,5 @@
 var greeting = "Welcome to your everyday nightmare";
+var introduced = false; 
 
 var Menu = {
 
@@ -21,7 +22,7 @@ var Menu = {
       // It will act as a button to start the game.
       var startBtn = this.add.button(game.world.centerX, game.world.centerY+90, 'start', this.startGame, this);
       startBtn.anchor.setTo(0.5);
-      var scoreBtn = this.add.button(game.world.centerX, game.world.centerY+140, 'score', this.startGame, this); //CHANGE WHAT HAPPENS
+      var scoreBtn = this.add.button(game.world.centerX, game.world.centerY+140, 'score', this.showScoreboard, this); //CHANGE WHAT HAPPENS
       scoreBtn.anchor.setTo(0.5);
 
 
@@ -36,9 +37,15 @@ var Menu = {
     startGame: function () {
 
       var introPlayed = JSON.parse(localStorage.getItem('intro_played'));
-      if(introPlayed)
+      if(introPlayed) {
+        introduced = true;
         game.state.start("Game");
+      }
       else
         game.state.start("Intro");
+    },
+
+    showScoreboard: function() {
+      game.state.start("Scoreboard");
     }
 }
