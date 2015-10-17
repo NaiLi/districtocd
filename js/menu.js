@@ -1,4 +1,5 @@
 var greeting = "Welcome to your everyday nightmare";
+var introduced = false; 
 
 var Menu = {
 
@@ -13,8 +14,6 @@ var Menu = {
     create: function () {
 
   		game.stage.backgroundColor = '#ffff88'
-      //BG
-      //var menuBG = game.add.sprite(0, 0, 'bg');
 
       // Add menu screen.
       var menuPic = game.add.sprite(game.world.centerX, game.world.centerY-20, 'urban');
@@ -23,7 +22,7 @@ var Menu = {
       // It will act as a button to start the game.
       var startBtn = this.add.button(game.world.centerX, game.world.centerY+90, 'start', this.startGame, this);
       startBtn.anchor.setTo(0.5);
-      var scoreBtn = this.add.button(game.world.centerX, game.world.centerY+140, 'score', this.startGame, this); //CHANGE WHAT HAPPENS
+      var scoreBtn = this.add.button(game.world.centerX, game.world.centerY+140, 'score', this.showScoreboard, this); //CHANGE WHAT HAPPENS
       scoreBtn.anchor.setTo(0.5);
 
 
@@ -37,31 +36,16 @@ var Menu = {
 
     startGame: function () {
 
-      /*
-      //State transition plugin
-      var transitionPlugin = game.plugins.add(Phaser.Plugin.StateTransition);
+      var introPlayed = JSON.parse(localStorage.getItem('intro_played'));
+      if(introPlayed) {
+        introduced = true;
+        game.state.start("Game");
+      }
+      else
+        game.state.start("Intro");
+    },
 
-      //define new properties to be tweened, duration, even ease
-      transitionPlugin.settings({
-
-          //how long the animation should take
-          duration: 1500,
-
-          //ease property
-          ease: Phaser.Easing.Exponential.InOut, // default ease /
-
-          //what property should be tweened
-          properties: {
-              alpha: 0,
-              scale: {
-                  x: 1.5,
-                  y: 1.5
-              }
-          }
-      });
-
-      //Change state
-      transitionPlugin.to("Intro");*/
-      game.state.start("Intro");
+    showScoreboard: function() {
+      game.state.start("Scoreboard");
     }
 }

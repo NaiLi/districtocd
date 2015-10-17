@@ -52,7 +52,7 @@ var Intro = {
       scoreTiles = game.add.group();
       textGroup = game.add.group();
 
-  		game.stage.backgroundColor = '#000'
+  		game.stage.backgroundColor = '#000';
       var worldWrapWidth = game.world.width - 40;
 
       // Text style
@@ -126,6 +126,9 @@ var Intro = {
 			game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL; //RESIZE? (better for desktop)
 			game.scale.setScreenSize(true);
 
+      // Set local storage that the intro is watched
+      var introPlayed = true;
+      localStorage.setItem('intro_played', JSON.stringify(introPlayed));
     },
 
     nextInstruction : function(tween) {
@@ -288,32 +291,6 @@ var Intro = {
     },
 
     startGame: function () {
-
-      /*
-      //State transition plugin
-      var transitionPlugin = game.plugins.add(Phaser.Plugin.StateTransition);
-
-      //define new properties to be tweened, duration, even ease
-      transitionPlugin.settings({
-
-          //how long the animation should take
-          duration: 1500,
-
-          //ease property
-          ease: Phaser.Easing.Exponential.InOut, // default ease /
-
-          //what property should be tweened
-          properties: {
-              alpha: 0,
-              scale: {
-                  x: 1.5,
-                  y: 1.5
-              }
-          }
-      });
-
-      //Change state
-      transitionPlugin.to("Intro");*/
       game.state.start("Game");
     }
 }
