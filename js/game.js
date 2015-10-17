@@ -49,11 +49,12 @@ var menuBtn;
 var gotitBtn;
 
 // Messages
-var message = ["Take as many steps with each foot on the same color.", "Mind your steps,\ndon't walk too slow!", "Maybe we have to send you back to the hospital..."];
+var message = ["Mind your steps,\ndon't walk too slow!", "Take as many steps with each foot on the same color.", "Maybe we have to send you back to the hospital..."];
 var messageNo = 0;
 
 // Instructions
 var showInstruction = 1;
+var instructionsShown = [];
 
 var colors = {
 					0:0x68327A, //purple (2:0x7A4432, //brown)
@@ -119,25 +120,30 @@ var Game = {
 				this.newRow(rowIndex--);
 			}
 
+			this.displayInstruction(showInstruction);
 
 
 			// Check if gameover
 			this.checkGameOver();
 
 			// Check if won
-			this.checkWon();
+			this.checkLevelUp();
 		}
 	},
 
 	stepClicked : function(tile, pointer) {
 
+		if(!tile.targetObject || tile.targetObject.sprite.key != "tile")
+			return;
+
 		if(!pause) {
-			if(tile.targetObject) {
-				tile.targetObject.sprite.alpha = 0.7;
-				//tile.targetObject.sprite.inputEnabled = false;
-				this.takeStep(tile.targetObject.sprite.name, tile.y, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
-			}
+			tile.targetObject.sprite.alpha = 0.5;
+			var y = groundTiles.y+tile.targetObject.sprite.y;
+			this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
 		}
+	
+		// Check if any instructions
+		this.checkInstructions();
 	},
 
 	takeStep : function (type, stepY, stepX) {
@@ -180,6 +186,8 @@ var Game = {
 		var resultTile = game.add.sprite(x, y, 'tile_wide');
 		resultTile.tint = colors[type];
 		resultTile.name = type;
+		resultTile.inputEnabled = true;
+		resultTile.input.pixelPerfectClick = true;
 
 		scoreTiles.add(resultTile);
 
@@ -204,32 +212,29 @@ var Game = {
 
 		if(leftStep > game.height || leftStep < 0) {
 			leftStep = 0;
-			//game.state.start("GameOver");
-			
-			this.pauseGame(true);
-			//this.createFlashMessage("Game over");
-			this.displayInstruction(2);
+			this.displayInstruction(-1);
 		}
 		if(rightStep > game.height || rightStep < 0) {
 			rightStep = 0;
-			//game.state.start("GameOver");
-			
-			this.pauseGame(true);
-			//this.createFlashMessage("Game over");
 			this.displayInstruction(-1);
-		}
-
-		// If not game over, check if any instructions
-		if(noSteppedTiles[0] == 3 && showInstruction == 1) {
-			this.displayInstruction(showInstruction);
-			showInstruction = 2;
-		} else if(steps == 16 && noSteppedTiles[0] < 2 && showInstruction == 2)  {
-			this.displayInstruction(showInstruction);
-			showInstruction = 0;
 		}
 	},
 
-	checkWon : function() { // TODO level up on time or score?
+	checkInstructions: function() {
+
+		// If player has not collected many of the same kind (show instruction 3)
+		if(noSteppedTiles[0] == 4) {
+			this.displayInstruction(showInstruction);
+			showInstruction = 2;
+		} 
+		// If player has too many in the same pile (show instruction 2)
+		else if(steps == 16 && noSteppedTiles[0] < 2)  {
+			this.displayInstruction(showInstruction);
+			showInstruction = 3;
+		}
+	},
+
+	checkLevelUp : function() { // TODO level up on time or score?
 		
 		if(time > levelTime) {
 		//if(score >= level*3000) {
@@ -241,7 +246,7 @@ var Game = {
 			lvlText.text = "Level " + level;
 
 			if(level == 5) {
-				steppedTiles[0][numberOfTypes] = 0;
+				steppedTiles[0][numberOfTypes] = 0; // Set to zero the for the new color
 				steppedTiles[1][numberOfTypes] = 0;
 				numberOfTypes++;
 			}
@@ -283,12 +288,41 @@ var Game = {
 
 	displayInstruction : function(number) {
 
+		// make sure the instruction hasn't already been shown
+		if(number != -1) {
+			if(instructionsShown[number])
+				return;
+		}
+
 		switch(number) {
 
 			case 0:
 				break;
-			case 1: // First instruction
+			case 1: // Intro instruction
+
 				this.pauseGame(true);
+				instructionsShown[number] = true;
+				showInstruction = 0;
+
+				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+				transbox.anchor.setTo(0.5);
+				transbox.alpha = 0.85;
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Start walking on the tiles,\nmake sure to have both feet within the screen.", barStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 1;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 50;
+
+    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+    		gotitBtn.anchor.x = 0.5;
+    		gotitBtn.anchor.y = 0;
+				break;
+
+			case 2: // First instruction
+				this.pauseGame(true);
+				showInstruction = 0;
+				instructionsShown[number] = true;
+
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
 				transbox.alpha = 0.85;
@@ -304,8 +338,11 @@ var Game = {
 
 				break;
 
-			case 2: 
+			case 3: 
 				this.pauseGame(true);
+				showInstruction = 0;
+				instructionsShown[number] = true;
+
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
 				transbox.alpha = 0.85;
@@ -321,6 +358,8 @@ var Game = {
 				break;
 
 			case -1: // Gameover
+
+				this.pauseGame(true);
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
 				transbox.alpha = 0.85;
@@ -340,6 +379,7 @@ var Game = {
 				menuBtn = this.add.button(game.world.centerX, game.world.centerY+70, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
     		menuBtn.anchor.setTo(0.5);
 				break;
+
 
 			default:
 				break;
@@ -376,7 +416,7 @@ var Game = {
 				var directionReduce = (s.x < 100) ? 0 : 1; // Which side to remove from
 				noSteppedTiles[directionReduce]--;
 				scoreTiles.remove(s);
-				//s.destroy();
+				s.destroy();
 				i--;
 			}
 		}
@@ -433,9 +473,9 @@ var Game = {
 				newTile.input.pixelPerfectClick = true;
 				newTile.tint = colors[randomValue];
 				newTile.name = randomValue;
-				newTile.initialYPosition = (i-1)*tileSize;
 				newTile.checkWorldBounds = true;
 				newTile.outOfBoundsKill = true;
+				newTile.alpha = 0.85;
 				groundTiles.add(newTile);
 			}
 		}
@@ -466,6 +506,7 @@ var Game = {
 				groundTiles.add(newTile);
 			}
 
+			newTile.alpha = 0.85;
 			newTile.inputEnabled = true;
 			newTile.input.pixelPerfectClick = true;
 			newTile.tint = colors[randomValue];
@@ -490,6 +531,9 @@ var Game = {
 		retryBtn.destroy();
 		menuBtn.destroy();
 		textSprite.destroy();
+
+		leftFoot.y = 1000;
+		rightFoot.y = 1000;
 
 		this.pauseGame(false);
 	},
