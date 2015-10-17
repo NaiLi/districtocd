@@ -13,8 +13,6 @@ var Menu = {
     create: function () {
 
   		game.stage.backgroundColor = '#ffff88'
-      //BG
-      //var menuBG = game.add.sprite(0, 0, 'bg');
 
       // Add menu screen.
       var menuPic = game.add.sprite(game.world.centerX, game.world.centerY-20, 'urban');

@@ -111,7 +111,6 @@ var Game = {
 		
 		if(!pause) {
 
-			//console.log("time " + time);
 			groundTiles.y 	+= speed;
 			leftStep 				+= speed;
 			rightStep 			+= speed;
@@ -647,14 +646,12 @@ var Game = {
 				data.highscore = score;
     	localStorage.setItem('scoreboard', JSON.stringify(data));
   	} else {
-  		console.log("creating new magic")
   		data = {};
   		data.score = [];
   		data.score.push(score);
   		data.highscore = score;
   		localStorage.setItem('scoreboard', JSON.stringify(data));
   	}
-  	console.log(data);
   },
 
   getHighscore: function() {
