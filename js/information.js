@@ -3,6 +3,7 @@ var Information = {
 
 	preload: function() {
 		game.load.image('menu', './assets/leftIcon.png');
+    game.load.image('clear', './assets/clearBtn.png');
 	},
 
   create: function () {
@@ -28,6 +29,10 @@ var Information = {
     var menuBtn = this.add.button(game.world.centerX, game.world.centerY+game.world.centerY/2, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
     menuBtn.anchor.setTo(0.5);
     menuBtn.scale.setTo(0.5);
+
+    var clearBtn = this.add.button(game.world.centerX, game.world.height-35, 'clear', this.clearProgress, this); //CHANGE WHAT HAPPENS
+    clearBtn.anchor.setTo(0.5);
+    clearBtn.scale.setTo(0.3);
     
     credits = "Title image by Freepic";
     var credits  = game.add.text(game.world.centerX, game.world.height-5, credits, textSmallStyle);
@@ -60,5 +65,9 @@ var Information = {
 
   toMenu: function() {
   	game.state.start("Menu");
+  },
+
+  clearProgress: function() {
+    localStorage.clear();
   }
 }
