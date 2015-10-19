@@ -6,11 +6,7 @@ var tileSize = 40;//w/6;//40;
 var cols = 6;
 var rows = 10;
 
-
-setTimeout(function() {
-	window.scrollTo(0,1);	
-}, 0);
-var game = new Phaser.Game(tileSize*cols, tileSize*rows, Phaser.AUTO, '');
+var game = new Phaser.Game(tileSize*cols, tileSize*rows, Phaser.CANVAS, '');//tileSize*cols, tileSize*rows, Phaser.AUTO, '');
 
 game.state.add('Intro', Intro);
 game.state.add('Menu', Menu);
