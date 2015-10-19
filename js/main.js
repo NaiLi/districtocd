@@ -12,5 +12,6 @@ game.state.add('Intro', Intro);
 game.state.add('Menu', Menu);
 game.state.add('Game', Game);
 game.state.add('Scoreboard', Scoreboard);
+game.state.add('Information', Information);
 
 game.state.start('Menu');

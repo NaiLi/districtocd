@@ -11,7 +11,7 @@ var steppedTiles;
 var noSteppedTiles;
 var speed;
 var level;
-var levelTime = 400;
+var levelTime = 300;
 var levelTimeIncrease = 400;
 var time;
 var pause;
@@ -31,15 +31,17 @@ var boxStyle;
 var textSprite;
 
 // Text styles
-var barStyle 					= { font: "14px Arial", fill: "#fff", align: "center" };
-var flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
-var boxStyle					= { font: "14px Arial", fill: "#fff", stroke: "black", strokeThickness: 1, align: "center" };
+var barStyle;
+var flashStyle;
+var boxStyle;
 
 // Sprite groups
 var footSteps;
 var scoreTiles;
 var groundTiles;
 var barGroup;
+var leftFootGO;
+var rightFootGO;
 //var tileCollisionGroup;
 //var shadow;
 
@@ -48,9 +50,10 @@ var transbox;
 var retryBtn;
 var menuBtn;
 var gotitBtn;
+var gameoverSprite;
 
 // Messages
-var message = ["Mind your steps,\ndon't walk too slow!", "Take as many steps with each foot on the same color.", "Maybe we have to send you back to the hospital..."];
+var message = ["Mind your steps,\ndon't walk too slow!", "Take as many steps with each foot on the same color.", "You get higher scores for removing more tiles at a time.", "Keep as many tiles of the same color in each column.", "Maybe we have to send you back to the hospital..."];
 var messageNo = 0;
 
 // Instructions
@@ -73,15 +76,21 @@ var Game = {
 		game.load.image('transbox', 'assets/blackbox.png');
 		game.load.image('shoeprint_right', 'assets/shoeprint_right.png');
 		game.load.image('shoeprint_left', 'assets/shoeprint_left.png');
-		game.load.image('up', 'assets/upArrow.png');
-		game.load.image('retry', './assets/retryBtn.png');
-		game.load.image('menu', './assets/menuBtn.png');
+		game.load.image('gameover', 'assets/gameover.png');
+		game.load.image('retry', './assets/retryIcon.png');
+		game.load.image('menu', './assets/menuIcon.png');
 		game.load.image('gotit', './assets/gotitBtn.png');
 	},
 
 	create : function () {
 
+		this.pauseGame(true);
+
 		game.stage.backgroundColor = '#000';
+		// Text styles
+		barStyle 					= { font: "14px Arial", fill: "#fff", align: "center" };
+		flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
+		boxStyle					= { font: "14px Arial", fill: "#000", stroke: "black", strokeThickness: 1, align: "center" };
 
 		// Reset game values
 		this.resetAll();
@@ -107,9 +116,9 @@ var Game = {
 
 	update : function() {
 
-		time++;
-		
 		if(!pause) {
+			
+			time++;
 
 			groundTiles.y 	+= speed;
 			leftStep 				+= speed;
@@ -141,7 +150,7 @@ var Game = {
 		if(!pause) {
 			tile.targetObject.sprite.alpha = 0.5;
 			var y = groundTiles.y+tile.targetObject.sprite.y;
-			this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);//tile.targetObject.sprite.initialYPosition+groundTiles.y+tileSize, tile.targetObject.sprite.x);
+			this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);
 		}
 	
 		// Check if any instructions
@@ -162,9 +171,6 @@ var Game = {
 			leftFoot 	= game.add.sprite(stepX+tileSize/2, stepY+tileSize/2, 'shoeprint_left');
 			leftFoot.anchor.setTo(0.5);
 
-
-			//leftFoot.x = stepX+tileSize/2;
-			//leftFoot.y = stepY-tileSize/2;
 		} else {											// If right foot
 			steppedTiles[1][type]++;
 			noSteppedTiles[1]++;
@@ -175,8 +181,6 @@ var Game = {
 			rightFoot 	= game.add.sprite(stepX+tileSize/2, stepY+tileSize/2, 'shoeprint_right');
 			rightFoot.anchor.setTo(0.5);
 
-			//rightFoot.x = stepX+tileSize/2;
-			//rightFoot.y = stepY+tileSize/2;
 		}
 		this.checkEvenSteps();
 	},
@@ -197,29 +201,18 @@ var Game = {
 
     fall.to({ y: y-(tileSize/2) }, 300);
     fall.start();
-
-
-		//resultTile.body.setCollisionGroup(tileCollisionGroup);
-		//resultTile.body.collides(tileCollisionGroup);
-
-/*
-		resultTile.body.angularVelocity = 0;
-		resultTile.body.setZeroDamping();
-		resultTile.body.mass = 1;
-*/
-		//shadow.y = (Math.ceil(steps/2)-1)*tileSize/2-360;
 	},
 
 	checkGameOver : function() {
 
-		if(leftStep > game.height || leftStep < 0) {
+		if(leftStep > game.height-tileSize || leftStep < 0) {
 			leftStep = 0;
-			this.displayInstruction(-1);
+			this.displayInstruction(-1, "left");
 			this.saveScore();
 		}
-		if(rightStep > game.height || rightStep < 0) {
+		if(rightStep > game.height-tileSize || rightStep < 0) {
 			rightStep = 0;
-			this.displayInstruction(-1);
+			this.displayInstruction(-1, "right");
 			this.saveScore();
 		}
 	},
@@ -227,7 +220,7 @@ var Game = {
 	checkInstructions: function() {
 
 		// If player has not collected many of the same kind (show instruction 3)
-		if(noSteppedTiles[0] == 4) {
+		if(noSteppedTiles[0] == 5) {
 			this.displayInstruction(showInstruction);
 			showInstruction = 2;
 		} 
@@ -243,13 +236,13 @@ var Game = {
 		if(time > levelTime) {
 		//if(score >= level*3000) {
 			//this.pauseGame(true); // TODO should it freeze for a moment?
-			this.createFlashMessage(score + "!\nLevel up!", 2000);
+			this.createFlashMessage(score + " p!\nLevel up!", 2000);
 			level++;
 			speed += 0.1; //TODO make better progression, solve this
 			levelTime += levelTimeIncrease;
 			lvlText.text = "Level " + level;
 
-			if(level == 5) {
+			if(level == 3) {
 				steppedTiles[0][numberOfTypes] = 0; // Set to zero the for the new color
 				steppedTiles[1][numberOfTypes] = 0;
 				numberOfTypes++;
@@ -290,7 +283,7 @@ var Game = {
 
 	},
 
-	displayInstruction : function(number) {
+	displayInstruction : function(number, foot) {
 
 		// make sure the instruction hasn't already been shown
 		if(number != -1) {
@@ -310,7 +303,7 @@ var Game = {
 
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
-				transbox.alpha = 0.85;
+				transbox.alpha = 0.9;
 				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Start walking on the tiles,\nmake sure to have both feet within the screen.", barStyle);
       	textSprite.anchor.x = 0.5;
       	textSprite.anchor.y = 1;
@@ -338,9 +331,20 @@ var Game = {
       	textSprite.wordWrap = true;
       	textSprite.wordWrapWidth = game.world.width - 50;
 
-    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
-    		gotitBtn.anchor.x = 0.5;
-    		gotitBtn.anchor.y = 0;
+    		var buttonsTween = game.add.tween(textSprite);
+
+				buttonsTween.to({ alpha : 1 }, 800);
+				buttonsTween.onComplete.add(function() {
+
+	    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+	    		gotitBtn.anchor.x = 0.5;
+	    		gotitBtn.anchor.y = 0;
+					gotitBtn.alpha = 0;
+
+					game.add.tween(gotitBtn).to({ alpha: 1}, 500).start();
+
+	    	},this);
+	    	buttonsTween.start();
 
 				break;
 
@@ -360,33 +364,94 @@ var Game = {
       	textSprite.wordWrap = true;
       	textSprite.wordWrapWidth = game.world.width - 50;
 
-    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
-    		gotitBtn.anchor.x = 0.5;
-    		gotitBtn.anchor.y = 0;
+    		var buttonsTween = game.add.tween(textSprite);
+
+				buttonsTween.to({ alpha : 1 }, 800);
+				buttonsTween.onComplete.add(function() {
+
+	    		gotitBtn = this.add.button(game.world.centerX, game.world.centerY+30, 'gotit', this.resumeGame, this);
+	    		gotitBtn.anchor.x = 0.5;
+	    		gotitBtn.anchor.y = 0;
+					gotitBtn.alpha = 0;
+
+					game.add.tween(gotitBtn).to({ alpha: 1}, 500).start();
+
+	    	},this);
+	    	buttonsTween.start();
+
 				break;
 
 			case -1: // Gameover
 
 				this.pauseGame(true);
+
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
 				transbox.alpha = 0.85;
-				text = (message[messageNo]) ? message[messageNo] : "you lost your mind...";
-      	messageNo++;
-      	// TODO if new highscore (score > highscore)
-				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Game over...\nHighscore: " + highscore + "\n" + "Your score: " + score + "\n" + text, boxStyle);
-      	textSprite.anchor.x = 0.5;
-      	textSprite.anchor.y = 1;
-      	textSprite.wordWrap = true;
-      	textSprite.wordWrapWidth = game.world.width - 50;
 
-  	    // It will act as a button to start the game.
-    		retryBtn = this.add.button(game.world.centerX, game.world.centerY, 'retry', this.restartGame, this);
-    		retryBtn.anchor.x = 0.5;
-    		retryBtn.anchor.y = 0;
-    
-				menuBtn = this.add.button(game.world.centerX, game.world.centerY+70, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
-    		menuBtn.anchor.setTo(0.5);
+				gameoverSprite = game.add.sprite(game.world.centerX, game.world.centerY, 'gameover');
+				gameoverSprite.scale.setTo(0.5, 0.5);
+				gameoverSprite.anchor.setTo(0.5);
+
+				var trans = 1500;
+				// Animate feet
+				if(foot == "left") {
+					var x = leftFoot.x;
+					var y = leftFoot.y;
+					//leftFoot.destroy();
+					leftFootGO 	= game.add.sprite(x, y, 'shoeprint_left');
+					leftFootGO.anchor.setTo(0.5);
+					game.add.tween(leftFootGO).to({alpha: 0}, trans+300).start();
+					game.add.tween(leftFootGO.scale).to({ x: 10, y: 10}, trans, Phaser.Easing.Linear.None, true).start();
+				} else if(foot == "right") {
+					var x = rightFoot.x;
+					var y = rightFoot.y;
+					//rightFoot.destroy();
+					rightFootGO 	= game.add.sprite(x, y, 'shoeprint_right');
+					rightFootGO.anchor.setTo(0.5);
+					game.add.tween(rightFootGO).to({alpha: 0}, trans+300).start();
+					game.add.tween(rightFootGO.scale).to({ x: 10, y: 10}, trans, Phaser.Easing.Linear.None, true).start();
+				}
+
+      	messageNo++;
+				
+				text = "";      	
+      	// TODO if new highscore (score > highscore)
+      	if(score > highscore) {
+      		text += "New highscore!\n";
+      	}
+      	text += "Highscore: " + highscore + "\n" + "Your score: " + score + "\n\n";
+				text += (message[messageNo]) ? message[messageNo] : "you lost your mind...";
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, text, boxStyle);
+      	textSprite.anchor.x = 0.5;
+      	textSprite.anchor.y = 0.7;
+      	textSprite.wordWrap = true;
+      	textSprite.wordWrapWidth = game.world.width - 70;
+
+
+    		var buttonsTween = game.add.tween(textSprite);
+
+				buttonsTween.to({ alpha : 1 }, 1000);
+				buttonsTween.onComplete.add(function() {
+			    // It will act as a button to start the game.
+					retryBtn = this.add.button(game.world.centerX-5, game.world.centerY+game.world.centerY/4, 'retry', this.restartGame, this);
+					retryBtn.scale.setTo(0.5, 0.5);
+					retryBtn.anchor.x = 1;
+					retryBtn.anchor.y = 0;
+					retryBtn.alpha = 0;
+
+					menuBtn = this.add.button(game.world.centerX+5, game.world.centerY+game.world.centerY/4, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
+					menuBtn.scale.setTo(0.5, 0.5);
+					menuBtn.anchor.x = 0;
+					menuBtn.anchor.y = 0;
+					menuBtn.alpha = 0;
+
+					game.add.tween(retryBtn).to({ alpha: 1}, 500).start();
+					game.add.tween(menuBtn).to({ alpha: 1}, 500).start();
+
+				}, this);
+				buttonsTween.start();
+
 				break;
 
 
@@ -439,6 +504,7 @@ var Game = {
 		scoreTiles.destroy();
 	},
 
+	// Make all remaining score tiles fall up
 	scoreTilesFall : function() {
 
 		var left = 1;
@@ -466,6 +532,7 @@ var Game = {
 		}
 	},
 
+	// Create initial ground tiles, both visible and dead
 	createNewRow : function(i) {
 		
 		if(i == -1) { // create a set of dead sprites
@@ -490,6 +557,7 @@ var Game = {
 		}
 	},
 
+	// Create a new row of ground tiles (used during game)
 	newRow : function(i) {
 		for(var j=0; j < cols; j++) {
 
@@ -524,7 +592,16 @@ var Game = {
 		}
 	},
 
+	// Restart game
 	restartGame: function() {
+
+		transbox.destroy();
+		retryBtn.destroy();
+		menuBtn.destroy();
+		textSprite.destroy();
+		gameoverSprite.destroy();
+		leftFootGO.destroy();
+		rightFootGO.destroy();
 
 		this.resetAll();
 
@@ -536,33 +613,27 @@ var Game = {
 		this.createBar();
 		this.createFlash();
 
-		transbox.destroy();
-		retryBtn.destroy();
-		menuBtn.destroy();
-		textSprite.destroy();
 
 		leftFoot.y = 1000;
 		rightFoot.y = 1000;
 
-		this.pauseGame(false);
 	},
 
+	// Remove instruction objects and unpause
 	resumeGame: function() {
 		
 		transbox.destroy();
 		textSprite.destroy();
-		//retryBtn.destroy();
-		//menuBtn.destroy();
-
 		gotitBtn.destroy();
-		
 		this.pauseGame(false);
 	},
 
+	// Switch to menu state
   toMenu: function() {
   	game.state.start("Menu");
   },
 
+  // Reset all game variables
   resetAll: function() {
   	
 		score = 0;
@@ -570,11 +641,13 @@ var Game = {
 		noSteppedTiles = [];
 		speed = 1;
 		level = 1;
+		levelTime = 300;
 		time = 0;
 		pause = false;
 		steps = 0;
 		numberOfTypes = 2;
 		highscore = this.getHighscore();
+		firstStep = true;
 
 		steppedTiles[0] = [];
 		steppedTiles[1] = [];
@@ -593,6 +666,7 @@ var Game = {
 		rightStep = 0;
   },
 
+  // Create sprite groups
   createGroups: function() {
 		groundTiles = game.add.group();
 		footSteps = game.add.group();
@@ -600,6 +674,7 @@ var Game = {
 		barGroup = game.add.group();
   },
 
+  // Create all initial ground tiles
   renderStartTiles: function() {
 
 		// Add all tiles
@@ -611,14 +686,19 @@ var Game = {
 		this.createNewRow(-1);
   },
 
+  // Create feet
   createFeet: function() {
 		// Feet
 		leftFoot 	= game.add.sprite(0, -1000, 'shoeprint_left');
 		rightFoot = game.add.sprite(0, -1000, 'shoeprint_right');
 		footSteps.add(leftFoot);
 		footSteps.add(rightFoot);
+
+		leftFootGO 	= game.add.sprite(0, -1000, 'shoeprint_left');
+		rightFootGO = game.add.sprite(0, -1000, 'shoeprint_right');
   },
 
+  // Create top bar
   createBar: function() {
   	    // Top bar
 		topBarOne = game.add.sprite(0, 0, 'tile_wide');
@@ -634,6 +714,7 @@ var Game = {
     barGroup.add(lvlText);
   },
 
+  // Create empty flash text
   createFlash: function() {
     flashText 	= game.add.text(game.world.centerX, game.world.centerY-(game.world.centerY/4), "" ,flashStyle);
 			flashText.anchor.setTo(0.5);
@@ -641,15 +722,43 @@ var Game = {
     flashText.wordWrapWidth = window.innerWidth - 50;
   },
 
+  // Save score when game over, if higher score than 0
   saveScore: function() {
 
+  	if(score == 0) {
+  		return;
+  	}
+
+  	// Get local storage
   	var data = JSON.parse(localStorage.getItem('scoreboard'));
+
+  	// Save in score array
   	if(data && data.score) {
+
+  		// Push and sort, save only top 5
   		data.score.push(score);
+  		data.score.sort(function(a,b) {
+  			return a > b;
+  		});
+  		var temp = [];
+  		var count = 0;
+  		for(var i = data.score.length-1; i >= 0; i--) {
+  			if(count == 5)
+					break;
+  			temp.push(data.score[i]);
+  			count ++;
+  		}
+  		data.score = temp;
+
+  		// Store highest score
   		if(score > data.highscore)
 				data.highscore = score;
+    	
+    	// Save all to local storage
     	localStorage.setItem('scoreboard', JSON.stringify(data));
-  	} else {
+
+  	} 
+  	else { // If there is no local storage, create new data
   		data = {};
   		data.score = [];
   		data.score.push(score);
@@ -658,6 +767,7 @@ var Game = {
   	}
   },
 
+  // Get all highscores from local storage
   getHighscore: function() {
 
   	var data = JSON.parse(localStorage.getItem('scoreboard'));

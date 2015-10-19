@@ -1,10 +1,7 @@
-var title = "Scoreboard";
-var scores;
 
-var Scoreboard = {
+var Information = {
 
 	preload: function() {
-    game.load.image('highscore', './assets/highscore.png');
 		game.load.image('menu', './assets/leftIcon.png');
 	},
 
@@ -16,31 +13,28 @@ var Scoreboard = {
     scores = this.getData();
 
     // Texts
-    var textStyle   = { font: "20px Arial", fill: "#68327A", align: "center" };
+    var textStyle         = { font: "20px Arial", fill: "#68327A", align: "center" };
+    var textSmallStyle    = { font: "14px Arial", fill: "#68327A", align: "center" };
     var worldWrapWidth = game.world.width - 40;
-
-    highscoreSprite = game.add.sprite(game.world.centerX, game.world.centerY/3, 'highscore');
-    highscoreSprite.scale.setTo(0.5, 0.5);
-    highscoreSprite.anchor.setTo(0.5);
-
-
-    var text = "";
-    if(scores) {
-      scores.forEach(function(score) {
-        text += score + "\n";
-      });
-    }
+    
+    var text = "Game by\nLinnéa Nåbo\n\n\n";
 
     // Sprites
-    var textSprite  = game.add.text(game.world.centerX, game.world.centerY/2, text, textStyle);
-    textSprite.anchor.x = 0.5;
-    textSprite.anchor.y = 0;
+    var textSprite  = game.add.text(game.world.centerX, 120, text, textStyle);
+    textSprite.anchor.setTo(0.5);
     textSprite.wordWrap = true;
     textSprite.wordWrapWidth = worldWrapWidth;
     
     var menuBtn = this.add.button(game.world.centerX, game.world.centerY+game.world.centerY/2, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
     menuBtn.anchor.setTo(0.5);
     menuBtn.scale.setTo(0.5);
+    
+    credits = "Title image by Freepic";
+    var credits  = game.add.text(game.world.centerX, game.world.height-5, credits, textSmallStyle);
+    credits.anchor.x = 0.5;
+    credits.anchor.y = 1;
+    credits.wordWrap = true;
+    credits.wordWrapWidth = worldWrapWidth;
 
 
 		// Responsiveness

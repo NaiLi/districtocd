@@ -208,6 +208,7 @@ var Intro = {
           readyBtn.anchor.setTo(0.5);
           readyBtn.alpha = 0;
           game.add.tween(readyBtn).to( { alpha: 1 }, durationSuperslow).start();
+          game.add.tween(readyBtn.scale).to( {x: 0.83, y: 0.83}, 2000, Phaser.Easing.Linear.In, true, 0, 1500, true).start();
 
           break;
 
