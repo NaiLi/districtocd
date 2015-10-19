@@ -17,7 +17,7 @@ var Information = {
     var textSmallStyle    = { font: "14px Arial", fill: "#68327A", align: "center" };
     var worldWrapWidth = game.world.width - 40;
     
-    var text = "Game by\nLinnéa Nåbo\n\n\n";
+    var text = "Game by\nLinnéa Nåbo\n\nRead more at:\nnaili.github.io";
 
     // Sprites
     var textSprite  = game.add.text(game.world.centerX, 120, text, textStyle);
