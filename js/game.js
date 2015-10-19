@@ -205,16 +205,19 @@ var Game = {
 
 	checkGameOver : function() {
 
-		if(leftStep > game.height-tileSize || leftStep < 0) {
+		var step = (leftStep > rightStep) ? rightStep : leftStep;
+		var foot = (leftStep > rightStep) ? "right" : "left";
+
+		if(step > game.height-tileSize || leftStep < 0) {
 			leftStep = 0;
-			this.displayInstruction(-1, "left");
+			this.displayInstruction(-1, foot);
 			this.saveScore();
-		}
+		}/*
 		if(rightStep > game.height-tileSize || rightStep < 0) {
 			rightStep = 0;
 			this.displayInstruction(-1, "right");
 			this.saveScore();
-		}
+		}*/
 	},
 
 	checkInstructions: function() {
