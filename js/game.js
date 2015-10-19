@@ -307,7 +307,7 @@ var Game = {
 				transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
 				transbox.anchor.setTo(0.5);
 				transbox.alpha = 0.9;
-				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Start walking on the tiles,\nmake sure to have both feet within the screen.", barStyle);
+				textSprite  = game.add.text(game.world.centerX, game.world.centerY, "Start walking on the tiles,\nmake sure to have at least one foot within the screen.", barStyle);
       	textSprite.anchor.x = 0.5;
       	textSprite.anchor.y = 1;
       	textSprite.wordWrap = true;
