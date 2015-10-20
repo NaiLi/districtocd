@@ -42,6 +42,8 @@ var groundTiles;
 var barGroup;
 var leftFootGO;
 var rightFootGO;
+var pauseBtn;
+var continueBtn;
 //var tileCollisionGroup;
 //var shadow;
 
@@ -74,12 +76,15 @@ var Game = {
 		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
 		game.load.image('transbox', 'assets/blackbox.png');
+		game.load.image('topbar', 'assets/topbar.png');
 		game.load.image('shoeprint_right', 'assets/shoeprint_right.png');
 		game.load.image('shoeprint_left', 'assets/shoeprint_left.png');
 		game.load.image('gameover', 'assets/gameover.png');
 		game.load.image('retry', './assets/retryIcon.png');
 		game.load.image('menu', './assets/menuIcon.png');
 		game.load.image('gotit', './assets/gotitBtn.png');
+		game.load.image('pause', './assets/pauseIcon.png');
+		game.load.image('continue', './assets/playIcon.png');
 	},
 
 	create : function () {
@@ -101,6 +106,7 @@ var Game = {
     this.createFeet();
 		this.createBar();
 		this.createFlash();
+		this.createPauseButton();
 
 
 		// Event when clicking on tile
@@ -144,17 +150,25 @@ var Game = {
 
 	stepClicked : function(tile, pointer) {
 
-		if(!tile.targetObject || tile.targetObject.sprite.key != "tile")
+		if(!tile.targetObject)
 			return;
 
-		if(!pause) {
-			tile.targetObject.sprite.alpha = 0.5;
-			var y = groundTiles.y+tile.targetObject.sprite.y;
-			this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);
+		if(tile.targetObject.sprite.key == "pause" && !pause) {
+			this.onPause();
+			return;
 		}
-	
-		// Check if any instructions
-		this.checkInstructions();
+
+		else if(tile.targetObject.sprite.key == "tile") {
+
+			if(!pause) {
+				tile.targetObject.sprite.alpha = 0.5;
+				var y = groundTiles.y+tile.targetObject.sprite.y;
+				this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);
+			}
+		
+			// Check if any instructions
+			this.checkInstructions();
+		}
 	},
 
 	takeStep : function (type, stepY, stepX) {
@@ -188,7 +202,7 @@ var Game = {
 	addResultTile : function(type, direction) { //direction: 0: left, 1: right
 
 		var x = direction*(cols/2)*tileSize;// + tileSize*1.5;// + 60;
-		var y = noSteppedTiles[direction]*(tileSize/2)+(tileSize/2); //TODO remove frome nosteppedtiles when removing score tile
+		var y = noSteppedTiles[direction]*(tileSize/2)+(tileSize); //TODO remove frome nosteppedtiles when removing score tile
 		var resultTile = game.add.sprite(x, y, 'tile_wide');
 		resultTile.tint = colors[type];
 		resultTile.name = type;
@@ -265,7 +279,7 @@ var Game = {
 
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
 
-				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*1000; // TODO make this more awesome
+				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*10; // TODO make this more awesome
 				score += addedScore;
 				scoreText.text = "Score: " + score;
 
@@ -423,7 +437,7 @@ var Game = {
       	if(score > highscore) {
       		text += "New highscore!\n";
       	}
-      	text += "Highscore: " + highscore + "\n" + "Your score: " + score + "\n\n";
+      	text += "Your score: " + score + "\n" +  "Highscore: " + highscore + "\n\n";
 				text += (message[messageNo]) ? message[messageNo] : "you lost your mind...";
 				textSprite  = game.add.text(game.world.centerX, game.world.centerY, text, boxStyle);
       	textSprite.anchor.x = 0.5;
@@ -521,14 +535,14 @@ var Game = {
 			if(directionReduce == 0) { // if left side
 				var fall = game.add.tween(s);
 
-				fall.to({ y: left*(tileSize/2) }, 300);
+				fall.to({ y: left*(tileSize/2)+tileSize/2 }, 300);
 	    	fall.start();
 	    	left++;
 
 			} else {
 				var fall = game.add.tween(s);
 
-				fall.to({ y: right*(tileSize/2) }, 300);
+				fall.to({ y: right*(tileSize/2)+tileSize/2 }, 300);
 	    	fall.start();
 	    	right++;
 			}
@@ -602,9 +616,18 @@ var Game = {
 		retryBtn.destroy();
 		menuBtn.destroy();
 		textSprite.destroy();
-		gameoverSprite.destroy();
 		leftFootGO.destroy();
 		rightFootGO.destroy();
+		pauseBtn.destroy();
+
+		if(gameoverSprite)
+			gameoverSprite.destroy();
+		if(continueBtn)
+			continueBtn.destroy();
+		if(retryBtn)
+			retryBtn.destroy();
+		if(menuBtn)
+			menuBtn.destroy();
 
 		this.resetAll();
 
@@ -615,7 +638,7 @@ var Game = {
 		this.renderStartTiles();
 		this.createBar();
 		this.createFlash();
-
+		this.createPauseButton();
 
 		leftFoot.y = 1000;
 		rightFoot.y = 1000;
@@ -628,6 +651,14 @@ var Game = {
 		transbox.destroy();
 		textSprite.destroy();
 		gotitBtn.destroy();
+
+		if(continueBtn)
+			continueBtn.destroy();
+		if(retryBtn)
+			retryBtn.destroy();
+		if(menuBtn)
+			menuBtn.destroy();
+		
 		this.pauseGame(false);
 	},
 
@@ -703,16 +734,25 @@ var Game = {
 
   // Create top bar
   createBar: function() {
-  	    // Top bar
+    // Top bar
+    topBar = game.add.sprite(0, 0, 'topbar');
+		topBar.inputEnabled = true;
+		topBar.input.pixelPerfectClick = true;
+    /*
 		topBarOne = game.add.sprite(0, 0, 'tile_wide');
 		topBarTwo = game.add.sprite(tileSize*cols/2, 0, 'tile_wide');
 		topBarOne.tint = 0x000000;
 		topBarTwo.tint = 0x000000;
 		barGroup.add(topBarOne);
-		barGroup.add(topBarTwo);
+		barGroup.add(topBarTwo);*/
     // Score text
     scoreText 	= game.add.text(5, 2, "Score: 0", barStyle);
-    lvlText 		= game.add.text(170, 2, "Level: 1", barStyle);
+    lvlText 		= game.add.text(5, tileSize/2, "Level: 1", barStyle);
+    scoreText.anchor.y 	= 0;
+    scoreText.anchor.x 	= 0;
+    lvlText.anchor.y 		= 0;
+    lvlText.anchor.x 		= 0;
+    barGroup.add(topBar);
     barGroup.add(scoreText);
     barGroup.add(lvlText);
   },
@@ -723,6 +763,52 @@ var Game = {
 			flashText.anchor.setTo(0.5);
     flashText.wordWrap 			= true;
     flashText.wordWrapWidth = window.innerWidth - 50;
+  },
+
+  createPauseButton: function() {
+
+		pauseBtn = game.add.sprite(game.world.width-3, tileSize/2, 'pause');
+		pauseBtn.anchor.x = 1;
+		pauseBtn.anchor.y = 0.5;
+		pauseBtn.scale.setTo(0.35);
+
+		pauseBtn.inputEnabled = true;
+		pauseBtn.input.pixelPerfectClick = true;
+
+  },
+
+  onPause: function() {
+
+		this.pauseGame(true);
+
+		transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+		transbox.anchor.setTo(0.5);
+		transbox.alpha = 0.85;
+
+		text = "What do you want to do?";      	
+		textSprite  = game.add.text(game.world.centerX, game.world.centerY/2, text, barStyle);
+  	textSprite.anchor.x = 0.5;
+  	textSprite.anchor.y = 0.5;
+  	textSprite.wordWrap = true;
+  	textSprite.wordWrapWidth = game.world.width - 70;
+
+  	// Continue
+		continueBtn = this.add.button(game.world.centerX, game.world.centerY, 'continue', this.resumeGame, this);
+		continueBtn.scale.setTo(0.6);
+		continueBtn.anchor.x = 0.5;
+		continueBtn.anchor.y = 0.5;
+
+    // It will act as a button to start the game.
+		retryBtn = this.add.button(game.world.centerX-5, game.world.centerY+80, 'retry', this.restartGame, this);
+		retryBtn.scale.setTo(0.5);
+		retryBtn.anchor.x = 1;
+		retryBtn.anchor.y = 0;
+
+		menuBtn = this.add.button(game.world.centerX+5, game.world.centerY+80, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
+		menuBtn.scale.setTo(0.5);
+		menuBtn.anchor.x = 0;
+		menuBtn.anchor.y = 0;
+
   },
 
   // Save score when game over, if higher score than 0
