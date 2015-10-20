@@ -4,7 +4,7 @@ District OCD is a web based mobile game based on an obsessive compulsive disorde
 
 Play it at: naili.github.io/districtocd
 
-***
+---
 
 ### Version
 1.0.0
@@ -22,3 +22,4 @@ Title image by [Freepik] from [Flaticon]
 [Flaticon]:http://www.flaticon.com
 [Freepik]:http://www.freepik.com
 [Phaser]:http://phaser.io
+[naili.github.io/districtocd]:naili.github.io/districtocd
