@@ -277,7 +277,6 @@ var Game = {
 
 	pauseGame : function(bool) {
 		pause = bool;
-		//game.paused = bool; //TODO use this instead
 	},
 
 	checkEvenSteps : function() {
@@ -286,7 +285,8 @@ var Game = {
 
 			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
 
-				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*10; // TODO make this more awesome
+				// Score depending on amount of tiles removed
+				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*10; 
 				score += addedScore;
 				scoreText.text = "Score: " + score;
 
@@ -299,6 +299,7 @@ var Game = {
 		}
 	},
 
+	// Creates a flash message over the screen, writes text in time duration
 	createFlashMessage : function(text, duration) {
 
 		flashText.alpha = 1.0;
@@ -307,6 +308,7 @@ var Game = {
 
 	},
 
+	// Consists all information displayed on top of the game, initial instruction, running initial instructions and game over
 	displayInstruction : function(number, foot) {
 
 		// make sure the instruction hasn't already been shown
@@ -485,6 +487,7 @@ var Game = {
 		}
 	},
 
+	// Make all tiles of the same color when even amount glow
 	clearScoreTiles : function(type) {
 		
 		// Check for tiles to remove, make them glow
@@ -502,6 +505,7 @@ var Game = {
 		}
 	},
 
+	// Remove tiles of the same color when even amount, called after clearScoreTiles
 	removeTiles : function(tile) {
 
 		var type = tile.name;
@@ -522,11 +526,6 @@ var Game = {
 		this.scoreTilesFall();
 	},
 
-	removeAllTiles : function() {
-
-		groundTiles.destroy();
-		scoreTiles.destroy();
-	},
 
 	// Make all remaining score tiles fall up
 	scoreTilesFall : function() {
@@ -552,31 +551,6 @@ var Game = {
 				fall.to({ y: right*(tileSize/2)+tileSize/2 }, 300);
 	    	fall.start();
 	    	right++;
-			}
-		}
-	},
-
-	// Create initial ground tiles, both visible and dead
-	createNewRow : function(i) {
-		
-		if(i == -1) { // create a set of dead sprites
-			for(var j=0; j < cols*4; j++) {
-				var newTile = game.add.sprite(0, 0, 'tile');
-				groundTiles.add(newTile);
-				newTile.kill();
-			}
-		} else { // create all initial rows
-			for(var j=0; j < cols; j++) {
-				var randomValue = Math.floor(Math.random()*numberOfTypes);
-				var newTile = game.add.sprite(j*tileSize, (i-1)*tileSize, 'tile');
-				newTile.inputEnabled = true;
-				newTile.input.pixelPerfectClick = true;
-				newTile.tint = colors[randomValue];
-				newTile.name = randomValue;
-				newTile.checkWorldBounds = true;
-				newTile.outOfBoundsKill = true;
-				newTile.alpha = 0.85;
-				groundTiles.add(newTile);
 			}
 		}
 	},
@@ -616,62 +590,49 @@ var Game = {
 		}
 	},
 
-	// Restart game
-	restartGame: function() {
 
-		transbox.destroy();
-		retryBtn.destroy();
-		menuBtn.destroy();
-		textSprite.destroy();
-		leftFootGO.destroy();
-		rightFootGO.destroy();
-		pauseBtn.destroy();
-
-		if(gameoverSprite)
-			gameoverSprite.destroy();
-		if(continueBtn)
-			continueBtn.destroy();
-		if(retryBtn)
-			retryBtn.destroy();
-		if(menuBtn)
-			menuBtn.destroy();
-
-		this.resetAll();
-
-		this.removeAllTiles();
-
-		this.createGroups();
-
-		this.renderStartTiles();
-		this.createBar();
-		this.createFlash();
-		this.createPauseButton();
-
-		leftFoot.y = 1000;
-		rightFoot.y = 1000;
-
-	},
-
-	// Remove instruction objects and unpause
-	resumeGame: function() {
-		
-		transbox.destroy();
-		textSprite.destroy();
-		gotitBtn.destroy();
-
-		if(continueBtn)
-			continueBtn.destroy();
-		if(retryBtn)
-			retryBtn.destroy();
-		if(menuBtn)
-			menuBtn.destroy();
-		
-		this.pauseGame(false);
-	},
+  /************************************************************* 
+  										MANAGING GAME STATE
+   *************************************************************/
 
 	// Switch to menu state
   toMenu: function() {
   	game.state.start("Menu");
+  },
+
+  // When pause is clicked
+  onPause: function() {
+
+		this.pauseGame(true);
+
+		transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
+		transbox.anchor.setTo(0.5);
+		transbox.alpha = 0.85;
+
+		text = "What do you want to do?";      	
+		textSprite  = game.add.text(game.world.centerX, game.world.centerY/2, text, barStyle);
+  	textSprite.anchor.x = 0.5;
+  	textSprite.anchor.y = 0.5;
+  	textSprite.wordWrap = true;
+  	textSprite.wordWrapWidth = game.world.width - 70;
+
+  	// Continue
+		continueBtn = this.add.button(game.world.centerX, game.world.centerY, 'continue', this.resumeGame, this);
+		continueBtn.scale.setTo(0.6);
+		continueBtn.anchor.x = 0.5;
+		continueBtn.anchor.y = 0.5;
+
+    // It will act as a button to start the game.
+		retryBtn = this.add.button(game.world.centerX-5, game.world.centerY+80, 'retry', this.restartGame, this);
+		retryBtn.scale.setTo(0.5);
+		retryBtn.anchor.x = 1;
+		retryBtn.anchor.y = 0;
+
+		menuBtn = this.add.button(game.world.centerX+5, game.world.centerY+80, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
+		menuBtn.scale.setTo(0.5);
+		menuBtn.anchor.x = 0;
+		menuBtn.anchor.y = 0;
+
   },
 
   // Reset all game variables
@@ -707,6 +668,64 @@ var Game = {
 		rightStep = 0;
   },
 
+ 	// Restart game
+	restartGame: function() {
+
+		transbox.destroy();
+		retryBtn.destroy();
+		menuBtn.destroy();
+		textSprite.destroy();
+		leftFootGO.destroy();
+		rightFootGO.destroy();
+		pauseBtn.destroy();
+
+		if(gameoverSprite)
+			gameoverSprite.destroy();
+		if(continueBtn)
+			continueBtn.destroy();
+		if(retryBtn)
+			retryBtn.destroy();
+		if(menuBtn)
+			menuBtn.destroy();
+
+		this.resetAll();
+
+		this.removeAllTiles();
+
+		this.createGroups();
+
+		this.renderStartTiles();
+		this.createBar();
+		this.createFlash();
+		this.createPauseButton();
+
+		leftFoot.y = 1000;
+		rightFoot.y = 1000;
+
+	},
+
+	// Resume game: remove instruction objects and unpause
+	resumeGame: function() {
+		
+		transbox.destroy();
+		textSprite.destroy();
+		gotitBtn.destroy();
+
+		if(continueBtn)
+			continueBtn.destroy();
+		if(retryBtn)
+			retryBtn.destroy();
+		if(menuBtn)
+			menuBtn.destroy();
+		
+		this.pauseGame(false);
+	},
+	
+
+  /************************************************************* 
+							CREATING AND DESTROYING CONTENT 
+   *************************************************************/
+
   // Create sprite groups
   createGroups: function() {
 		groundTiles = game.add.group();
@@ -715,7 +734,7 @@ var Game = {
 		barGroup = game.add.group();
   },
 
-  // Create all initial ground tiles
+  // Create all initial ground tiles, uses createNewRow
   renderStartTiles: function() {
 
 		// Add all tiles
@@ -726,6 +745,31 @@ var Game = {
 		//Create some dead tiles for recycling
 		this.createNewRow(-1);
   },
+
+  	// Create initial ground tiles, both visible and dead
+	createNewRow : function(i) {
+		
+		if(i == -1) { // create a set of dead sprites
+			for(var j=0; j < cols*4; j++) {
+				var newTile = game.add.sprite(0, 0, 'tile');
+				groundTiles.add(newTile);
+				newTile.kill();
+			}
+		} else { // create all initial rows
+			for(var j=0; j < cols; j++) {
+				var randomValue = Math.floor(Math.random()*numberOfTypes);
+				var newTile = game.add.sprite(j*tileSize, (i-1)*tileSize, 'tile');
+				newTile.inputEnabled = true;
+				newTile.input.pixelPerfectClick = true;
+				newTile.tint = colors[randomValue];
+				newTile.name = randomValue;
+				newTile.checkWorldBounds = true;
+				newTile.outOfBoundsKill = true;
+				newTile.alpha = 0.85;
+				groundTiles.add(newTile);
+			}
+		}
+	},
 
   // Create feet
   createFeet: function() {
@@ -741,17 +785,12 @@ var Game = {
 
   // Create top bar
   createBar: function() {
+
     // Top bar
     topBar = game.add.sprite(0, 0, 'topbar');
 		topBar.inputEnabled = true;
 		topBar.input.pixelPerfectClick = true;
-    /*
-		topBarOne = game.add.sprite(0, 0, 'tile_wide');
-		topBarTwo = game.add.sprite(tileSize*cols/2, 0, 'tile_wide');
-		topBarOne.tint = 0x000000;
-		topBarTwo.tint = 0x000000;
-		barGroup.add(topBarOne);
-		barGroup.add(topBarTwo);*/
+
     // Score text
     scoreText 	= game.add.text(5, 2, "Score: 0", barStyle);
     lvlText 		= game.add.text(5, tileSize/2, "Level: 1", barStyle);
@@ -772,6 +811,7 @@ var Game = {
     flashText.wordWrapWidth = window.innerWidth - 50;
   },
 
+  // Create top pause button
   createPauseButton: function() {
 
 		pauseBtn = game.add.sprite(game.world.width-3, tileSize/2, 'pause');
@@ -784,41 +824,30 @@ var Game = {
 
   },
 
-  onPause: function() {
+	// Clear all type of tiles from the game entirely
+	removeAllTiles : function() {
 
-		this.pauseGame(true);
+		groundTiles.destroy();
+		scoreTiles.destroy();
+	},
 
-		transbox = game.add.sprite(game.world.centerX, game.world.centerY, 'transbox');
-		transbox.anchor.setTo(0.5);
-		transbox.alpha = 0.85;
 
-		text = "What do you want to do?";      	
-		textSprite  = game.add.text(game.world.centerX, game.world.centerY/2, text, barStyle);
-  	textSprite.anchor.x = 0.5;
-  	textSprite.anchor.y = 0.5;
-  	textSprite.wordWrap = true;
-  	textSprite.wordWrapWidth = game.world.width - 70;
+  /************************************************************* 
+  										HANDLE LOCAL STORAGE 
+   *************************************************************/
 
-  	// Continue
-		continueBtn = this.add.button(game.world.centerX, game.world.centerY, 'continue', this.resumeGame, this);
-		continueBtn.scale.setTo(0.6);
-		continueBtn.anchor.x = 0.5;
-		continueBtn.anchor.y = 0.5;
+  // Get all highscores from local storage
+  getHighscore: function() {
 
-    // It will act as a button to start the game.
-		retryBtn = this.add.button(game.world.centerX-5, game.world.centerY+80, 'retry', this.restartGame, this);
-		retryBtn.scale.setTo(0.5);
-		retryBtn.anchor.x = 1;
-		retryBtn.anchor.y = 0;
-
-		menuBtn = this.add.button(game.world.centerX+5, game.world.centerY+80, 'menu', this.toMenu, this); //CHANGE WHAT HAPPENS
-		menuBtn.scale.setTo(0.5);
-		menuBtn.anchor.x = 0;
-		menuBtn.anchor.y = 0;
-
+  	var data = JSON.parse(localStorage.getItem('scoreboard'));
+  	if(data && data.highscore) {
+  		return data.highscore;
+  	} else {
+  		return 0;
+  	}
   },
 
-  // Save score when game over, if higher score than 0
+    // Save score when game over, if higher score than 0
   saveScore: function() {
 
   	if(score == 0) {
@@ -860,17 +889,6 @@ var Game = {
   		data.score.push(score);
   		data.highscore = score;
   		localStorage.setItem('scoreboard', JSON.stringify(data));
-  	}
-  },
-
-  // Get all highscores from local storage
-  getHighscore: function() {
-
-  	var data = JSON.parse(localStorage.getItem('scoreboard'));
-  	if(data && data.highscore) {
-  		return data.highscore;
-  	} else {
-  		return 0;
   	}
   }
 };
