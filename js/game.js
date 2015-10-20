@@ -20,6 +20,7 @@ var leftStep;
 var rightStep;
 var gameoverReason = 1;
 var highscore;
+var levelUpgrade = 3;
 
 // Texts
 var scoreText;
@@ -62,12 +63,8 @@ var messageNo = 0;
 var showInstruction = 1;
 var instructionsShown = [];
 
-var colors = {
-					0:0x68327A, //purple (2:0x7A4432, //brown)
-					1:0xffff88, //yellow (3:0x327A75	//greenish)
-					2:0x32687A,	//blueish
-					3:0x999999	//grey
-				}
+var colors;
+var colorsLength;
 
 var Game = {
 
@@ -85,17 +82,25 @@ var Game = {
 		game.load.image('gotit', './assets/gotitBtn.png');
 		game.load.image('pause', './assets/pauseIcon.png');
 		game.load.image('continue', './assets/playIcon.png');
+
+		colors = {
+					0:0x68327A, //purple (2:0x7A4432, //brown)
+					1:0xffff88, //yellow
+					2:0x32687A,	//blueish
+					3:0x008F47,	//greenish
+					4:0x888888	//grey
+				}
+		colorsLength = Object.keys(colors).length;
 	},
 
 	create : function () {
-
 		this.pauseGame(true);
 
 		game.stage.backgroundColor = '#000';
 		// Text styles
 		barStyle 					= { font: "14px Arial", fill: "#fff", align: "center" };
 		flashStyle 				= { font: "30px Arial", fill: "#fff", stroke: "black", strokeThickness: 3, align: "center" };
-		boxStyle					= { font: "14px Arial", fill: "#000", stroke: "black", strokeThickness: 1, align: "center" };
+		boxStyle					= { font: "12px Arial", fill: "#000", stroke: "black", strokeThickness: 1, align: "center" };
 
 		// Reset game values
 		this.resetAll();
@@ -255,16 +260,18 @@ var Game = {
 			//this.pauseGame(true); // TODO should it freeze for a moment?
 			this.createFlashMessage(score + " p!\nLevel up!", 2000);
 			level++;
-			speed += 0.1; //TODO make better progression, solve this
+			speed += 0.3/level; //TODO make better progression, solve this
 			levelTime += levelTimeIncrease;
 			lvlText.text = "Level " + level;
 
-			if(level == 3) {
+			// Every third level - add a color
+			if(level%levelUpgrade == 0 && numberOfTypes < colorsLength) {
+				console.log("extra")
 				steppedTiles[0][numberOfTypes] = 0; // Set to zero the for the new color
 				steppedTiles[1][numberOfTypes] = 0;
 				numberOfTypes++;
+				levelUpgrade++;
 			}
-
 		}
 	},
 
@@ -437,7 +444,7 @@ var Game = {
       	if(score > highscore) {
       		text += "New highscore!\n";
       	}
-      	text += "Your score: " + score + "\n" +  "Highscore: " + highscore + "\n\n";
+      	text += "Level: " + level + "\n" + "Your score: " + score + "\n" +  "Highscore: " + highscore + "\n\n";
 				text += (message[messageNo]) ? message[messageNo] : "you lost your mind...";
 				textSprite  = game.add.text(game.world.centerX, game.world.centerY, text, boxStyle);
       	textSprite.anchor.x = 0.5;
