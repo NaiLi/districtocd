@@ -65,6 +65,7 @@ var instructionsShown = [];
 
 var colors;
 var colorsLength;
+var illegalColor;
 
 var Game = {
 
@@ -220,6 +221,13 @@ var Game = {
 
     fall.to({ y: y-(tileSize/2) }, 300);
     fall.start();
+
+    // Hack for increased difficulty in lvl 15
+		if(level == 15) { // Needs some new stuff here... 
+			if(illegalColor == -1) {
+				this.removeStrategicColor();
+			}
+		}
 	},
 
 	checkGameOver : function() {
@@ -266,15 +274,53 @@ var Game = {
 
 			// Every third level - add a color
 			if(level%levelUpgrade == 0 && numberOfTypes < colorsLength) {
-				console.log("extra")
-				steppedTiles[0][numberOfTypes] = 0; // Set to zero the for the new color
-				steppedTiles[1][numberOfTypes] = 0;
-				numberOfTypes++;
-				levelUpgrade++;
+				this.addColor();
+			}
+			if(level > 15 && noSteppedTiles[0] > 6 || level == 20) {
+				illegalColor = -1;
 			}
 		}
 	},
 
+	addColor: function() {
+		steppedTiles[0][numberOfTypes] = 0; // Set to zero the for the new color
+		steppedTiles[1][numberOfTypes] = 0;
+		numberOfTypes++;
+	},
+
+	removeStrategicColor: function() {
+
+		var colorArray = [];
+		for(var i = 0; i < numberOfTypes; i++) {
+			if(steppedTiles[0][i] > 0 || steppedTiles[1][i] > 0) {
+				colorArray.push(i);
+			}
+		}
+		illegalColor = colorArray[Math.floor(Math.random() * colorArray.length)];
+	},
+	/* A list of how levels work right now
+
+	Level 1: 	Speed: 1   				Colors: 2
+	Level 2: 	Speed: 1.15 			Colors: 2
+	Level 3: 	Speed: 1.25				Colors: 3
+
+
+	Level 6: 	Speed: 1.435			Colors: 4
+
+
+	Level 9: 	Speed: 1.548			Colors: 5
+	Level 10: Speed: 1.578
+	Level 15: Speed: 1.695			Remove one color that the player has on the screen
+															Is removed if pile is > 6
+
+	Level 20: Speed: 1.779			Bring back illegal color if this is not already done
+	
+	Level 30: Speed: 1.898
+	Level 40: Speed: 1.984
+
+	View time increase in wolfram alpha:
+	ListPlot[{{1,1},{2,1.15},{6,1.435},{10,1.578},{20,1.779},{30,1.898},{40,1.983},{100,2.256}]
+	*/
 	pauseGame : function(bool) {
 		pause = bool;
 	},
@@ -560,6 +606,9 @@ var Game = {
 		for(var j=0; j < cols; j++) {
 
 			var randomValue = Math.floor(Math.random()*numberOfTypes);
+			while(randomValue == illegalColor) {
+				randomValue = Math.floor(Math.random()*numberOfTypes);
+			}
 
 			// Revive old tile
 			var newTile = groundTiles.getFirstExists(false);
@@ -650,6 +699,7 @@ var Game = {
 		numberOfTypes = 2;
 		highscore = this.getHighscore();
 		firstStep = true;
+		illegalColor = -1;
 
 		steppedTiles[0] = [];
 		steppedTiles[1] = [];
