@@ -66,6 +66,13 @@ var instructionsShown = [];
 var colors;
 var colorsLength;
 var illegalColor;
+var colors = {
+					0:0x68327A, //purple
+					1:0xffff88, //yellow
+					2:0x32687A,	//blueish
+					3:0x008F47,	//greenish
+					4:0x888888	//grey
+				}
 
 var Game = {
 
@@ -84,13 +91,6 @@ var Game = {
 		game.load.image('pause', './assets/pauseIcon.png');
 		game.load.image('continue', './assets/playIcon.png');
 
-		colors = {
-					0:0x68327A, //purple
-					1:0xffff88, //yellow
-					2:0x32687A,	//blueish
-					3:0x008F47,	//greenish
-					4:0x888888	//grey
-				}
 		colorsLength = Object.keys(colors).length;
 	},
 
