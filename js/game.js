@@ -70,8 +70,8 @@ var illegalColor;
 var Game = {
 
 	preload : function() {
+
 		game.load.image('tile', 'assets/tile.png');
-		//game.load.image('shadow', 'assets/shadow.png');
 		game.load.image('tile_wide', 'assets/tile-wide.png');
 		game.load.image('transbox', 'assets/blackbox.png');
 		game.load.image('topbar', 'assets/topbar.png');
@@ -85,7 +85,7 @@ var Game = {
 		game.load.image('continue', './assets/playIcon.png');
 
 		colors = {
-					0:0x68327A, //purple (2:0x7A4432, //brown)
+					0:0x68327A, //purple
 					1:0xffff88, //yellow
 					2:0x32687A,	//blueish
 					3:0x008F47,	//greenish
@@ -95,6 +95,7 @@ var Game = {
 	},
 
 	create : function () {
+
 		this.pauseGame(true);
 
 		game.stage.backgroundColor = '#000';
@@ -154,6 +155,11 @@ var Game = {
 		}
 	},
 
+  /************************************************************* 
+  										GAME UPDATES
+   *************************************************************/
+
+  // Clicklistener
 	stepClicked : function(tile, pointer) {
 
 		if(!tile.targetObject)
@@ -177,6 +183,7 @@ var Game = {
 		}
 	},
 
+	// If stepped on a ground tile
 	takeStep : function (type, stepY, stepX) {
 
 		steps++;
@@ -205,6 +212,7 @@ var Game = {
 		this.checkEvenSteps();
 	},
 
+	// Add a result tile for the step
 	addResultTile : function(type, direction) { //direction: 0: left, 1: right
 
 		var x = direction*(cols/2)*tileSize;// + tileSize*1.5;// + 60;
@@ -223,13 +231,14 @@ var Game = {
     fall.start();
 
     // Hack for increased difficulty in lvl 15
-		if(level == 15) { // Needs some new stuff here... 
+		if(level == 15) {
 			if(illegalColor == -1) {
 				this.removeStrategicColor();
 			}
 		}
 	},
 
+	// Check if both feet are out of screen - then game over
 	checkGameOver : function() {
 
 		var step = (leftStep > rightStep) ? rightStep : leftStep;
@@ -239,14 +248,10 @@ var Game = {
 			leftStep = 0;
 			this.displayInstruction(-1, foot);
 			this.saveScore();
-		}/*
-		if(rightStep > game.height-tileSize || rightStep < 0) {
-			rightStep = 0;
-			this.displayInstruction(-1, "right");
-			this.saveScore();
-		}*/
+		}
 	},
 
+	// Check if it is time to display any instructions
 	checkInstructions: function() {
 
 		// If player has not collected many of the same kind (show instruction 3)
@@ -261,11 +266,10 @@ var Game = {
 		}
 	},
 
-	checkLevelUp : function() { // TODO level up on time or score?
+	// Check level time to see if level up
+	checkLevelUp : function() {
 		
 		if(time > levelTime) {
-		//if(score >= level*3000) {
-			//this.pauseGame(true); // TODO should it freeze for a moment?
 			this.createFlashMessage(score + " p!\nLevel up!", 2000);
 			level++;
 			speed += 0.3/level; //TODO make better progression, solve this
@@ -282,12 +286,36 @@ var Game = {
 		}
 	},
 
+	// Check if even steps are taken on the same color, if so, clear those tiles
+	checkEvenSteps : function() {
+
+		for(var type = 0; type < numberOfTypes; type++) {
+
+			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
+
+				// Score depending on amount of tiles removed
+				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*10; 
+				score += addedScore;
+				scoreText.text = "Score: " + score;
+
+				this.createFlashMessage(addedScore, 1000);
+
+				steppedTiles[0][type] = 0;
+				steppedTiles[1][type] = 0;
+				this.clearScoreTiles(type);
+			}
+		}
+	},
+
+	// Adds a new color to the game
 	addColor: function() {
 		steppedTiles[0][numberOfTypes] = 0; // Set to zero the for the new color
 		steppedTiles[1][numberOfTypes] = 0;
 		numberOfTypes++;
 	},
 
+	// This removes a color that the player has among the score tiles
+	// used at some levelups
 	removeStrategicColor: function() {
 
 		var colorArray = [];
@@ -298,6 +326,7 @@ var Game = {
 		}
 		illegalColor = colorArray[Math.floor(Math.random() * colorArray.length)];
 	},
+
 	/* A list of how levels work right now
 
 	Level 1: 	Speed: 1   				Colors: 2
@@ -321,29 +350,11 @@ var Game = {
 	View time increase in wolfram alpha:
 	ListPlot[{{1,1},{2,1.15},{6,1.435},{10,1.578},{20,1.779},{30,1.898},{40,1.983},{100,2.256}]
 	*/
-	pauseGame : function(bool) {
-		pause = bool;
-	},
 
-	checkEvenSteps : function() {
 
-		for(var type = 0; type < numberOfTypes; type++) {
-
-			if(steppedTiles[0][type] != 0 && steppedTiles[1][type] != 0 && steppedTiles[0][type] == steppedTiles[1][type]) {
-
-				// Score depending on amount of tiles removed
-				var addedScore = steppedTiles[0][type]*steppedTiles[0][type]*10; 
-				score += addedScore;
-				scoreText.text = "Score: " + score;
-
-				this.createFlashMessage(addedScore, 1000);
-
-				steppedTiles[0][type] = 0;
-				steppedTiles[1][type] = 0;
-				this.clearScoreTiles(type);
-			}
-		}
-	},
+  /************************************************************* 
+  										HANDELING MESSAGES
+   *************************************************************/
 
 	// Creates a flash message over the screen, writes text in time duration
 	createFlashMessage : function(text, duration) {
@@ -533,6 +544,11 @@ var Game = {
 		}
 	},
 
+
+  /************************************************************* 
+  										HANDELING TILES
+   *************************************************************/
+
 	// Make all tiles of the same color when even amount glow
 	clearScoreTiles : function(type) {
 		
@@ -643,6 +659,10 @@ var Game = {
   /************************************************************* 
   										MANAGING GAME STATE
    *************************************************************/
+
+	pauseGame : function(bool) {
+		pause = bool;
+	},
 
 	// Switch to menu state
   toMenu: function() {
