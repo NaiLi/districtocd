@@ -30,7 +30,7 @@ var duration = 1000;
 var durationSlow = 2000;
 var durationSuperslow = 2500;
 
-var colors = {
+var coloring = {
 					0:0x68327A, //purple
 					1:0xffff88, //yellow
 					2:0x32687A,	//blueish
@@ -117,8 +117,8 @@ var Intro = {
       tileTwo.name = 5;
       tileOne.direction = 1;
       tileTwo.direction = 0;
-      tileOne.tint = colors[0];
-      tileTwo.tint = colors[0];
+      tileOne.tint = coloring[0];
+      tileTwo.tint = coloring[0];
 
       //var skipBtn = this.add.button(game.width-20, game.height-20, 'skip_btn', this.startGame, this); //CHANGE WHAT HAPPENS
       //skipBtn.anchor.setTo(1);
