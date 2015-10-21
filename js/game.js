@@ -559,6 +559,10 @@ var Game = {
 				var s = scoreTiles.children[i];
 				var glow = game.add.tween(s);
 
+				// Remove from stepped tile list
+				var directionReduce = (s.x < 100) ? 0 : 1; // Which side to remove from
+				noSteppedTiles[directionReduce]--;
+
 				glow.to({ tint : 0xffffff }, 500)
 					  .to({ alpha : 0.0 }, 1000);
 				glow.onComplete.add(this.removeTiles, this);
@@ -577,8 +581,6 @@ var Game = {
 			if(scoreTiles.children[i].name == type) {
 				var s = scoreTiles.children[i];
 
-				var directionReduce = (s.x < 100) ? 0 : 1; // Which side to remove from
-				noSteppedTiles[directionReduce]--;
 				scoreTiles.remove(s);
 				s.destroy();
 				i--;
