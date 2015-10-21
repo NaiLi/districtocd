@@ -551,23 +551,29 @@ var Game = {
 
 	// Make all tiles of the same color when even amount glow
 	clearScoreTiles : function(type) {
+
+		var temp = [];
 		
 		// Check for tiles to remove, make them glow
 		for (var i = 0; i < scoreTiles.children.length; i++) {
 			if(scoreTiles.children[i].name == type) {
+	
+				temp.push(scoreTiles.children[i]);
 
-				var s = scoreTiles.children[i];
-				var glow = game.add.tween(s);
-
-				// Remove from stepped tile list
-				var directionReduce = (s.x < 100) ? 0 : 1; // Which side to remove from
-				noSteppedTiles[directionReduce]--;
-
-				glow.to({ tint : 0xffffff }, 500)
-					  .to({ alpha : 0.0 }, 1000);
-				glow.onComplete.add(this.removeTiles, this);
-	    	glow.start();
 			}
+		}
+		
+		for(var i = 0; i < temp.length; i++) {
+			
+			var s = temp[i];
+
+			var glow = game.add.tween(s);
+
+			glow.to({ tint : 0xffffff }, 500)
+				  .to({ alpha : 0.0 }, 1000);
+		  if(i == temp.length-1)
+				glow.onComplete.add(this.removeTiles, this);
+    	glow.start();
 		}
 	},
 
@@ -580,6 +586,10 @@ var Game = {
 		for (var i = 0; i < scoreTiles.children.length; i++) {
 			if(scoreTiles.children[i].name == type) {
 				var s = scoreTiles.children[i];
+
+				// Remove from stepped tile list
+				var directionReduce = (scoreTiles.children[i].x < 100) ? 0 : 1; // Which side to remove from
+				noSteppedTiles[directionReduce]--;
 
 				scoreTiles.remove(s);
 				s.destroy();
