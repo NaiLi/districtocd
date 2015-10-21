@@ -30,6 +30,13 @@ var duration = 1000;
 var durationSlow = 2000;
 var durationSuperslow = 2500;
 
+var colors = {
+					0:0x68327A, //purple
+					1:0xffff88, //yellow
+					2:0x32687A,	//blueish
+					3:0x008F47,	//greenish
+					4:0x888888	//grey
+				}
 
 // Messages
 var textOne   = "I know you're scared."
