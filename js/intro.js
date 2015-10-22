@@ -40,7 +40,7 @@ var coloring = {
 
 // Messages
 var textOne   = "I know you're scared."
-var textTwo   = "But you got to\nget out at some point."
+var textTwo   = "But you've got to\nget out at some point."
 var textThree = "Just put your\nright foot on the tile..."
 var textFour = "\nGreat job!\nNow the only way to lose that uncomfortable feeling in your foot is to step with the left foot on the same color";
 var textFive = "See? It all works out if you just give in to your OCD.\nMake sure to have as many tiles of the same color in each column.\nNow go get that milk for me!";
@@ -255,7 +255,7 @@ var Intro = {
       var x = direction*(cols/2)*tileSize;
       var y = tileSize*3;
       var resultTile = game.add.sprite(x, y, 'tile_wide');
-      resultTile.tint = colors[type];
+      resultTile.tint = coloring[type];
       resultTile.name = type;
       scoreTiles.add(resultTile);
 
