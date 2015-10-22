@@ -647,14 +647,12 @@ var Game = {
 				newTile.x = j*tileSize;
 				newTile.y = (i-1)*tileSize;
 				newTile.tint = 0xffffff;
-				newTile.alpha = 1;
 		
 			} else { // if there is no dead tile --> create one
 
 				newTile = game.add.sprite(j*tileSize, (i-1)*tileSize, 'tile');
 				newTile.checkWorldBounds = true;
 				newTile.outOfBoundsKill = true;
-				groundTiles.add(newTile);
 			}
 
 			newTile.alpha = 0.85;
