@@ -63,9 +63,15 @@ var messageNo = 0;
 var showInstruction = 1;
 var instructionsShown = [];
 
-var colors;
 var colorsLength;
 var illegalColor;
+var colors = {
+					0:0x68327A, //purple
+					1:0xffff88, //yellow
+					2:0x32687A,	//blueish
+					3:0x008F47,	//greenish
+					4:0x888888	//grey
+				}
 
 var Game = {
 
@@ -84,13 +90,6 @@ var Game = {
 		game.load.image('pause', './assets/pauseIcon.png');
 		game.load.image('continue', './assets/playIcon.png');
 
-		colors = {
-					0:0x68327A, //purple
-					1:0xffff88, //yellow
-					2:0x32687A,	//blueish
-					3:0x008F47,	//greenish
-					4:0x888888	//grey
-				}
 		colorsLength = Object.keys(colors).length;
 	},
 
@@ -172,8 +171,12 @@ var Game = {
 
 		else if(tile.targetObject.sprite.key == "tile") {
 
+			if(tile.targetObject.sprite.clicked) {
+				return;
+			}
 			if(!pause) {
-				tile.targetObject.sprite.alpha = 0.5;
+				tile.targetObject.sprite.alpha = 0.3;
+				tile.targetObject.sprite.clicked = true;
 				var y = groundTiles.y+tile.targetObject.sprite.y;
 				this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);
 			}
@@ -663,6 +666,7 @@ var Game = {
 			newTile.input.pixelPerfectClick = true;
 			newTile.tint = colors[randomValue];
 			newTile.name = randomValue;
+			newTile.clicked = false;
 			groundTiles.add(newTile);
 		}
 	},
@@ -845,6 +849,7 @@ var Game = {
 				newTile.input.pixelPerfectClick = true;
 				newTile.tint = colors[randomValue];
 				newTile.name = randomValue;
+				newTile.clicked = false;
 				newTile.checkWorldBounds = true;
 				newTile.outOfBoundsKill = true;
 				newTile.alpha = 0.85;
