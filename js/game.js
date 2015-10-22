@@ -171,8 +171,12 @@ var Game = {
 
 		else if(tile.targetObject.sprite.key == "tile") {
 
+			if(tile.targetObject.sprite.clicked) {
+				return;
+			}
 			if(!pause) {
-				tile.targetObject.sprite.alpha = 0.5;
+				tile.targetObject.sprite.alpha = 0.3;
+				tile.targetObject.sprite.clicked = true;
 				var y = groundTiles.y+tile.targetObject.sprite.y;
 				this.takeStep(tile.targetObject.sprite.name, y, tile.targetObject.sprite.x);
 			}
@@ -660,6 +664,7 @@ var Game = {
 			newTile.input.pixelPerfectClick = true;
 			newTile.tint = colors[randomValue];
 			newTile.name = randomValue;
+			newTile.clicked = false;
 			groundTiles.add(newTile);
 		}
 	},
@@ -842,6 +847,7 @@ var Game = {
 				newTile.input.pixelPerfectClick = true;
 				newTile.tint = colors[randomValue];
 				newTile.name = randomValue;
+				newTile.clicked = false;
 				newTile.checkWorldBounds = true;
 				newTile.outOfBoundsKill = true;
 				newTile.alpha = 0.85;
