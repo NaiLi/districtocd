@@ -63,7 +63,6 @@ var messageNo = 0;
 var showInstruction = 1;
 var instructionsShown = [];
 
-var colors;
 var colorsLength;
 var illegalColor;
 var colors = {
